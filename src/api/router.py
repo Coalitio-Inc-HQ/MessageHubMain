@@ -28,7 +28,7 @@ async def registr_platform(platform_type: str, platform_name: str = Body(), url:
 @router.post("/user_registration/bot")
 async def registr_bot_user(platform_name: str = Body(), name: str = Body(), session: AsyncSession = Depends(get_session)):
     """
-    Регестрирует пользователя из бота.
+    Регистрирует пользователя из бота.
     """
     res = await bot_user_registration(session=session, platform_name=platform_name, name=name)
     platforms = await get_all_platform(session=session)
@@ -79,7 +79,7 @@ def date_time_convert(t: datetime.datetime) -> str:
 @router.post("/user_registration/web")
 async def registr_bot_user(platform_name: str = Body(), name: str = Body(), session: AsyncSession = Depends(get_session)):
     """
-    Регестрирует пользователя из web.
+    Регистрирует пользователя из web.
     """
     res = await user_registration(session=session, platform_name=platform_name, name=name)
     return {"user_id": res.id}
@@ -136,6 +136,7 @@ async def send_notification_user_added_to_chat(url: str, user_id: int, chat: Cha
 # async def sad(chat:ChatDTO,user_id:int = Body()):
 #     print(user_id)
 #     print(chat)
+
 
 @router.post("/get_chats_by_user")
 async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
