@@ -12,7 +12,7 @@ router = APIRouter(prefix="/message_service")
 @router.post("/platform_registration/{platform_type}")
 async def registr_platform(platform_type: str, platform_name: str = Body(), url: str = Body(), session: AsyncSession = Depends(get_session)):
     """
-    Регестрирует платформу бота.
+    Регистрирует платформу бота.
     """
     if len(platform_type) > 3:
         raise HTTPException(status_code=422, detail="len(platform_type)>3")
@@ -140,16 +140,16 @@ async def send_notification_user_added_to_chat(url: str, user_id: int, chat: Cha
 @router.post("/get_chats_by_user")
 async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
-    Возвращяет чаты пользователя.
+    Возвращает чаты пользователя.
     """
     res = await get_chats_by_user_id(session=session, user_id=user_id)
     return res
 
 
-@router.post("/get_messges_from_chat")
+@router.post("/get_messages_from_chat")
 async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
-    Возвращяет сообщения из чата.
+    Возвращает сообщения из чата.
     """
     res = await get_messges_from_chat(session=session, chat_id=chat_id, count=count, offset_message_id=offset_message_id)
     return res
