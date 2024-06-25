@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
@@ -14,12 +15,12 @@ class Settings(BaseSettings):
     DB_PASS_TEST: str
     DB_NAME_TEST: str
 
-    END_POINT_SEND_MESSAGE:str
+    END_POINT_SEND_MESSAGE: str
 
     @property
     def DATABASE_URL_ASINC(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-    
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

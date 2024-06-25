@@ -61,4 +61,61 @@ async def test_update_platforms_by_name():
     async with async_session_maker() as session:
         plat = await platform_registration(session=session, platform_type="bot", platform_name="tst2", url="asdasd")
         res = await update_platforms_by_name(session=session, platform_name="tst2", url="qwe")
-        assert res == [PlatformDTO(id=plat.id,platform_name=plat.platform_name,platform_type=plat.platform_type,url="qwe")]
+        assert res == [PlatformDTO(
+            id=plat.id, platform_name=plat.platform_name, platform_type=plat.platform_type, url="qwe")]
+
+
+async def test_user_registration():
+    async with async_session_maker() as session:
+        plat = await platform_registration(session=session, platform_type="bot", platform_name="3", url="asdasd")
+        user = await user_registration(session=session, platform_name=plat.platform_name, name="asd")
+        assert user == UserDTO(id=user.id, platform_id=plat.id, name="asd")
+
+
+async def test_get_list_of_waiting_chats():
+    async with async_session_maker() as session:
+        user = await bot_user_registration(session=session, platform_name="telga", name="asxd")
+        res = await get_list_of_waiting_chats(session=session)
+        funduser = None
+        for row in res:
+            if row.id == user.chat_id:
+                funduser = row.id
+        assert user.chat_id == funduser
+
+
+async def test_connect_to_a_waiting_chat():
+    async with async_session_maker() as session:
+        bot = await bot_user_registration(session=session, platform_name="telga", name="asxd")
+        user = await user_registration(session=session, platform_name="telga", name="zxc")
+
+        res = await connect_to_a_waiting_chat(session=session, user_id=user.id, chat_id=bot.chat_id)
+
+        assert bot.chat_id == res.id
+
+
+async def test_connect_user_to_chat():
+    async with async_session_maker() as session:
+        bot = await bot_user_registration(session=session, platform_name="telga", name="asxd")
+        user = await user_registration(session=session, platform_name="telga", name="zxc")
+
+        res = await connect_user_to_chat(session=session, user_id=user.id, chat_id=bot.chat_id)
+
+        assert bot.chat_id == res.chat_id
+
+
+async def test_get_chats_by_user_id():
+    async with async_session_maker() as session:
+        bot = await bot_user_registration(session=session, platform_name="telga", name="asxdsad")
+
+        res = await get_chats_by_user_id(session=session, user_id=bot.user_id)
+
+        assert bot.chat_id == res[0].id
+
+
+async def test_get_messges_from_chat():
+    async with async_session_maker() as session:
+        bot = await bot_user_registration(session=session, platform_name="telga", name="asxdsad")
+
+        res = await get_messges_from_chat(session=session, chat_id=bot.chat_id,count=10,offset_message_id=-1)
+
+        assert res == res
