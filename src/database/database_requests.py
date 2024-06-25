@@ -97,11 +97,15 @@ async def get_platforms_by_chat_id(session: AsyncSession, chat_id: int) -> list[
     return res_dto
 
 
-async def get_list_of_waiting_chats(session: AsyncSession) -> list[ChatDTO]:
+async def get_list_of_waiting_chats(session: AsyncSession,count:int) -> list[ChatDTO]:
     """
     Возращяет список всех ожидающих чатов.
     """
-    res = await session.execute(select(ChatORM).join(WaitingСhatORM))
+    res = None
+    if count<0:
+        res = await session.execute(select(ChatORM).join(WaitingСhatORM))
+    else:
+        res = await session.execute(select(ChatORM).join(WaitingСhatORM).limit(count))
     res_orm = res.scalars()
     res_dto = [ChatDTO.model_validate(
         row, from_attributes=True) for row in res_orm]

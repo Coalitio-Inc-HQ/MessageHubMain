@@ -75,7 +75,7 @@ async def test_user_registration():
 async def test_get_list_of_waiting_chats():
     async with async_session_maker() as session:
         user = await bot_user_registration(session=session, platform_name="telga", name="asxd")
-        res = await get_list_of_waiting_chats(session=session)
+        res = await get_list_of_waiting_chats(session=session,count=-1)
         funduser = None
         for row in res:
             if row.id == user.chat_id:

@@ -36,7 +36,7 @@ async def test_user_registration_web(ac: AsyncClient):
 
 
 async def test_get_list_of_waiting_chats(ac: AsyncClient):
-    response = await ac.post("/message_service/get_list_of_waiting_chats", json='0')
+    response = await ac.post("/message_service/get_list_of_waiting_chats", json='-1')
     assert response.status_code == 200
 
 

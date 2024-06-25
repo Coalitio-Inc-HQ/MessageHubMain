@@ -71,11 +71,11 @@ async def registr_bot_user(platform_name: str = Body(), name: str = Body(), sess
 
 
 @router.post("/get_list_of_waiting_chats")
-async def get_waiting_chats(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_waiting_chats(count: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Отдаёт список всех ожидающих чатов.
     """
-    res = await get_list_of_waiting_chats(session=session)
+    res = await get_list_of_waiting_chats(session=session,count=count)
     return res
 
 
