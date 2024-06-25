@@ -151,6 +151,23 @@ async def get_messges_from_chat(session: AsyncSession,chat_id: int, count:int,of
     return res_dto
 
 
+async def get_chat_by_id(session: AsyncSession, chat_id: int) -> ChatDTO:
+    """
+    Получает чат по id.
+    """
+    res = (await session.execute(select(ChatORM).where(ChatORM.id == chat_id))).scalar()
+    return ChatDTO.model_validate(res, from_attributes=True)
+
+
+async def get_platform_by_user_id(session: AsyncSession, user_id: int) -> PlatformDTO:
+    """
+    Получает платфолрму по user_id.
+    """
+    subq = select(UserORM.platform_id).where(UserORM.id==user_id).scalar_subquery()
+    res = (await session.execute(select(PlatformORM).where(PlatformORM.id == subq))).scalar()
+    return PlatformDTO.model_validate(res, from_attributes=True)
+
+
 """
 temp
 """

@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     DB_NAME_TEST: str
 
     END_POINT_SEND_MESSAGE: str
+    END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT:str
+    END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT:str
 
     @property
     def DATABASE_URL_ASINC(self):

@@ -30,9 +30,24 @@ async def registr_bot_user(platform_name: str = Body(), name: str = Body(), sess
     """
     Регестрирует пользователя из бота.
     """
-    # обработка добавлеения чата в ожидание!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     res = await bot_user_registration(session=session, platform_name=platform_name, name=name)
+    platforms = await get_all_platform(session=session)
+    chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
+    for platform in platforms:
+        if platform.platform_type == "web":
+            await send_notification_added_waiting_chat(url=platform.url, chat=chat)
+            # await send_notification_added_waiting_chat(url="http://localhost:8000/message_service",chat=chat)
+
     return {"user_id": res.user_id, "chat_id": res.chat_id}
+
+
+async def send_notification_added_waiting_chat(url: str, chat: ChatDTO):
+    async with AsyncClient(base_url=url) as clinet:
+        try:
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT, json={"id": chat.id, "name": chat.name})
+            response.raise_for_status()
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 @router.post("/send_a_message_to_chat")
@@ -43,7 +58,7 @@ async def send_a_message_to_chat(message: MessageDTO, session: AsyncSession = De
     res = await save_messege(session=session, message=message)
     platforms = await get_platforms_by_chat_id(session=session, chat_id=message.chat_id)
     for platform in platforms:
-        send_messge(platform.url, message)
+        await send_messge(platform.url, message)
         # await send_messge("http://localhost:8000/message_service",message)
     return {"status": "ok"}
 
@@ -75,28 +90,42 @@ async def get_waiting_chats(count: int = Body(), session: AsyncSession = Depends
     """
     Отдаёт список всех ожидающих чатов.
     """
-    res = await get_list_of_waiting_chats(session=session,count=count)
+    res = await get_list_of_waiting_chats(session=session, count=count)
     return res
 
 
 @router.post("/connect_to_a_waiting_chat")
-async def connect_to_waiting_chat(user_id: int = Body(),chat_id:int = Body(), session: AsyncSession = Depends(get_session)):
+async def connect_to_waiting_chat(user_id: int = Body(), chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Подключает к ожидающему чату.
     """
-    # оповещение о добавлении к чату !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res = await connect_to_a_waiting_chat(session=session,user_id = user_id,chat_id=chat_id)
+    res = await connect_to_a_waiting_chat(session=session, user_id=user_id, chat_id=chat_id)
+    #  ? а надо ли отправлять оповещение !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     return res
 
 
 @router.post("/connect_user_to_chat")
-async def connect_user_to_chat_(user_id: int = Body(),chat_id:int = Body(), session: AsyncSession = Depends(get_session)):
+async def connect_user_to_chat_(user_id: int = Body(), chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Подключает к ожидающему чату.
     """
-    # оповещение о добавлении к чату !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res = await connect_user_to_chat(session=session,user_id = user_id,chat_id=chat_id)
+    res = await connect_user_to_chat(session=session, user_id=user_id, chat_id=chat_id)
+    chat = await get_chat_by_id(session=session, chat_id=chat_id)
+    platform = await get_platform_by_user_id(session=session, user_id=user_id)
+    if platform.platform_type == "web":
+        await send_notification_user_added_to_chat(url=platform.url, user_id=user_id, chat=chat)
+
     return res
+
+
+async def send_notification_user_added_to_chat(url: str, user_id: int, chat: ChatDTO):
+    async with AsyncClient(base_url=url) as clinet:
+        try:
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user_id": user_id, "chat": chat.model_dump_json()})
+            response.raise_for_status()
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 @router.post("/get_chats_by_user")
@@ -104,14 +133,14 @@ async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depe
     """
     Возвращяет чаты пользователя.
     """
-    res = await get_chats_by_user_id(session=session,user_id = user_id)
+    res = await get_chats_by_user_id(session=session, user_id=user_id)
     return res
 
 
 @router.post("/get_messges_from_chat")
-async def get_messges_from_chat_(chat_id: int = Body(),count: int =Body(),offset_message_id:int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращяет сообщения из чата.
     """
-    res = await get_messges_from_chat(session=session,chat_id=chat_id,count=count,offset_message_id=offset_message_id)
+    res = await get_messges_from_chat(session=session, chat_id=chat_id, count=count, offset_message_id=offset_message_id)
     return res
