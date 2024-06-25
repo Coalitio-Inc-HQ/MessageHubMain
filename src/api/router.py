@@ -101,6 +101,10 @@ async def connect_to_waiting_chat(user_id: int = Body(), chat_id: int = Body(), 
     """
     res = await connect_to_a_waiting_chat(session=session, user_id=user_id, chat_id=chat_id)
     #  ? а надо ли отправлять оповещение !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    chat = await get_chat_by_id(session=session, chat_id=chat_id)
+    platform = await get_platform_by_user_id(session=session, user_id=user_id)
+    if platform.platform_type == "web":
+        await send_notification_user_added_to_chat(url=platform.url, user_id=user_id, chat=chat)
 
     return res
 
@@ -122,11 +126,16 @@ async def connect_user_to_chat_(user_id: int = Body(), chat_id: int = Body(), se
 async def send_notification_user_added_to_chat(url: str, user_id: int, chat: ChatDTO):
     async with AsyncClient(base_url=url) as clinet:
         try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user_id": user_id, "chat": chat.model_dump_json()})
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user_id": user_id, "chat": chat.dict()})
+            print(response.text)
             response.raise_for_status()
         except Exception as e:
             print(f"Error: {e}")
 
+# @router.post("/")
+# async def sad(chat:ChatDTO,user_id:int = Body()):
+#     print(user_id)
+#     print(chat)
 
 @router.post("/get_chats_by_user")
 async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depends(get_session)):

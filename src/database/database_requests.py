@@ -180,7 +180,9 @@ async def connect_to_a_waiting_chat(session: AsyncSession, user_id: int, chat_id
     await session.execute(insert(ChatUsersORM).values(user_id=user_id, chat_id=chat_id))
     await session.execute(delete(WaitingСhatORM).where(WaitingСhatORM.chat_id == chat_id))
     res = (await session.execute(select(ChatORM).where(ChatORM.id == chat_id))).scalar()
-    return ChatDTO.model_validate(res, from_attributes=True)
+    res = ChatDTO.model_validate(res, from_attributes=True)
+    await session.commit()
+    return res
 
 
 async def user_registration(session: AsyncSession, platform_name: str, name: str) -> UserDTO:
