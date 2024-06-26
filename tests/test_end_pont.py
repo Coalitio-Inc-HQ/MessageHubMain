@@ -72,13 +72,13 @@ async def test_get_chats_by_user(ac: AsyncClient):
     assert response.status_code == 200
 
 
-async def test_send_a_message_to_chat(ac: AsyncClient):
+async def test_send_a_message_to_chat1(ac: AsyncClient):
     response1 = await ac.post("/message_service/user_registration/bot", json={"platform_name": "telegram", "name": "Вася"})
     chatusers = response1.json()
     response = await ac.post("/message_service/send_a_message_to_chat", json={"id": 0, "chat_id": chatusers["chat_id"], "sender_id": chatusers["user_id"], "sended_at": date_time_convert(datetime.datetime.now()), "text": "xafasdfas"})
     
     mesg= response.json()
 
-    response1 = await ac.post("/message_service/get_messges_from_chat", json={"chat_id": chatusers['user_id'], "count": 10,"offset_message_id":-1})
+    response2 = await ac.post("/message_service/get_messages_from_chat", json={"chat_id": chatusers['user_id'], "count": 10,"offset_message_id":-1})
 
-    assert response1.status_code == 200
+    assert response2.status_code == 200

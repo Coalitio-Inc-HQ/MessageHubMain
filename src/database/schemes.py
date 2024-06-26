@@ -33,5 +33,5 @@ class MessageDTO(BaseModel):
     id: int|None
     chat_id: int
     sender_id: int
-    created_at: datetime
+    sended_at: datetime
     text: str | None
