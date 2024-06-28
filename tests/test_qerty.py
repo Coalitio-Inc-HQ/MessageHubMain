@@ -138,3 +138,18 @@ async def test_get_platform_by_user_id():
         res = await get_platform_by_user_id(session=session, user_id=bot.user_id)
 
         assert res == plat
+
+
+async def test_get_users_by_chat_id():
+    async with async_session_maker() as session:
+        plat = await platform_registration(session=session, platform_name="sadsadasdasd", platform_type="web", url="asdasdasd")
+        bot = await bot_user_registration(session=session, platform_name="sadsadasdasd", name="asxфывdxzcsad")
+        user = await user_registration(session=session, platform_name="sadsadasdasd", name="xzcz")
+
+        await connect_user_to_chat(session=session, user_id=user.id, chat_id=bot.chat_id)
+
+        res = await get_users_by_chat_id(session=session,chat_id=bot.chat_id)
+
+        s = UserDTO.model_validate((await session.execute(select(UserORM).where(UserORM.id==bot.user_id))).scalar(),from_attributes=True)
+
+        assert res == [s,user]

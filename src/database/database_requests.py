@@ -168,6 +168,18 @@ async def get_platform_by_user_id(session: AsyncSession, user_id: int) -> Platfo
     return PlatformDTO.model_validate(res, from_attributes=True)
 
 
+async def get_users_by_chat_id(session: AsyncSession, chat_id: int)->list[UserDTO]:
+    """
+    Получает всех пользователей чата
+    """
+    subq1 = select(ChatUsersORM.user_id).where(
+        ChatUsersORM.chat_id == chat_id).subquery()
+    subq2 = select(UserORM).where(UserORM.id.in_(subq1))
+    res = await session.execute(subq2)
+    res_orm = res.scalars()
+    res_dto = [UserDTO.model_validate(row, from_attributes=True) for row in res_orm]
+    return res_dto
+
 """
 temp
 """
