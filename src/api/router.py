@@ -85,8 +85,8 @@ async def registr_bot_user(platform_name: str = Body(), name: str = Body(), sess
     return {"user_id": res.id}
 
 
-@router.get("/get_list_of_waiting_chats")
-async def get_waiting_chats(count: int , session: AsyncSession = Depends(get_session)):
+@router.post("/get_list_of_waiting_chats")
+async def get_waiting_chats(count: int = Body() , session: AsyncSession = Depends(get_session)):
     """
     Отдаёт список всех ожидающих чатов.
     """
@@ -138,8 +138,8 @@ async def send_notification_user_added_to_chat(url: str, user_id: int, chat: Cha
 #     print(chat)
 
 
-@router.get("/get_chats_by_user")
-async def get_chats_by_user_(user_id: int , session: AsyncSession = Depends(get_session)):
+@router.post("/get_chats_by_user")
+async def get_chats_by_user_(user_id: int = Body() , session: AsyncSession = Depends(get_session)):
     """
     Возвращает чаты пользователя.
     """
@@ -147,8 +147,8 @@ async def get_chats_by_user_(user_id: int , session: AsyncSession = Depends(get_
     return res
 
 
-@router.get("/get_messages_from_chat")
-async def get_messges_from_chat_(chat_id: int, count: int, offset_message_id: int, session: AsyncSession = Depends(get_session)):
+@router.post("/get_messages_from_chat")
+async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает сообщения из чата.
     """
@@ -156,8 +156,8 @@ async def get_messges_from_chat_(chat_id: int, count: int, offset_message_id: in
     return res
 
 
-@router.get("/get_users_by_chat_id")
-async def get_users_by_chat_id_(chat_id: int, session: AsyncSession = Depends(get_session)):
+@router.post("/get_users_by_chat_id")
+async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает участников чата.
     """
