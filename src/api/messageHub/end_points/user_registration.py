@@ -32,14 +32,16 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
 
     platforms = await get_all_platform(session=session)
     chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
-    for platform in platforms:
-        if platform.platform_type == "web":
-            background_tasks.add_task(
-                send_notification_added_waiting_chat, url=platform.url, chat=chat)
-            # background_tasks.add_task(send_notification_added_waiting_chat,url="http://localhost:8001", chat=chat)
+    background_tasks.add_task(send_notifications_added_waiting_chat,platforms=platforms,chat=chat)
 
     return {"user_id": res.user_id, "chat_id": res.chat_id}
 
+
+async def send_notifications_added_waiting_chat(platforms:list[PlatformDTO],chat:ChatDTO):
+    for platform in platforms:
+        if platform.platform_type == "web":
+            await send_notification_added_waiting_chat(url=platform.url, chat=chat)
+            # await send_notification_added_waiting_chat(url="http://localhost:8001", chat=chat)
 
 async def send_notification_added_waiting_chat(url: str, chat: ChatDTO):
     async with AsyncClient(base_url=url) as clinet:

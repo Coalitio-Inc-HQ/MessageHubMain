@@ -60,27 +60,28 @@ async def connect_to_waiting_chat(background_tasks: BackgroundTasks, user_id: in
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
 
     platforms = await get_all_platform(session=session)
-    for platform in platforms:
-        if platform.platform_type == "web":
-            background_tasks.add_task(
-                send_notification_deleted_waiting_chat, url=platform.url, chat_id=chat.id)
-            # background_tasks.add_task(send_notification_deleted_waiting_chat, url="http://localhost:8001", chat_id=chat.id)
+    background_tasks.add_task(send_notifications_deleted_waiting_chat,platforms=platforms,chat=chat)
 
     platform = await get_platform_by_user_id(session=session, user_id=user_id)
     if platform.platform_type == "web":
-        background_tasks.add_task(
-            send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
+        background_tasks.add_task(send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
         # background_tasks.add_task(send_notification_user_added_to_chat,url="http://localhost:8001", user_id=user_id, chat=chat)
         # await send_notification_user_added_to_chat(url=platform.url, user_id=user_id, chat=chat)
 
     return res
 
 
+async def send_notifications_deleted_waiting_chat(platforms:list[PlatformDTO],chat:ChatDTO):
+    for platform in platforms:
+        if platform.platform_type == "web":
+            await send_notification_deleted_waiting_chat(url=platform.url, chat_id=chat.id)
+            # await send_notification_deleted_waiting_chat(url="http://localhost:8001", chat_id=chat.id)
+
+
 async def send_notification_deleted_waiting_chat(url: str, chat_id: int):
     async with AsyncClient(base_url=url) as clinet:
         try:
             response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT, json=str(chat_id))
-            print(response.text)
             response.raise_for_status()
         except Exception as e:
             print(f"send_notification_deleted_waiting_chat Error: {e}")
