@@ -34,8 +34,6 @@ async def root():
     return RedirectResponse("/docs")
 
 # тест хуков
-
-
 @app.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT)
 async def root(id: int = Body(), name: str = Body()):
     print(f"webhook add waiting chat id:{id} name:{name}")

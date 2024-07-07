@@ -19,7 +19,7 @@ async def registr_platform(platform_type: str, platform: PlatformIn, session: As
     """
     if len(platform_type) > 3:
         raise HTTPException(status_code=422, detail="len(platform_type)>3")
-    
+
     platforms = await get_platforms_by_name(session=session, platform_name=platform.platform_name)
 
     # перезваписываем url если платформа уже существует
