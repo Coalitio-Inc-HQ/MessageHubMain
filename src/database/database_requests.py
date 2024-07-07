@@ -1,7 +1,7 @@
 from .models import *
 from .schemes import *
 
-from sqlalchemy import select, insert, text, func, bindparam, update, delete
+from sqlalchemy import select, insert, text, func, bindparam, update, delete, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 import datetime
 
@@ -179,6 +179,28 @@ async def get_users_by_chat_id(session: AsyncSession, chat_id: int)->list[UserDT
     res_orm = res.scalars()
     res_dto = [UserDTO.model_validate(row, from_attributes=True) for row in res_orm]
     return res_dto
+
+async def whether_the_user_is_in_the_chat(session: AsyncSession,user_id:int,chat_id:int)->bool:
+    """
+    Проверяем принадлежит ли пользователдь чату
+    """
+    res = await( session.execute(select(func.count()).where(ChatUsersORM.chat_id==chat_id,ChatUsersORM.user_id==user_id)))
+    if (res.scalar()==1):
+        return True
+    else:
+        return False
+
+
+async def is_waiting_chat(session: AsyncSession,chat_id:int)->bool:
+    """
+    Проверяем является ли чат ожидающим
+    """
+    res = await( session.execute(select(func.count()).where(WaitingСhatORM.chat_id == chat_id)))
+    if (res.scalar()==1):
+        return True
+    else:
+        return False
+
 
 """
 temp

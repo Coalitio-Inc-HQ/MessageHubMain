@@ -1,6 +1,5 @@
 import uvicorn
 from src.main import app
+from src.settings import settings
 
-uvicorn.run(app, host="127.0.0.1", port=8001)
-# uvicorn.run(app, host="0.0.0.0", port=8001)
-# 0.0.0.0 для docker
+uvicorn.run(app, host=settings.APP_HOST, port=settings.APP_PORT)

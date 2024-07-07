@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_ECHO: bool
 
+    APP_HOST:str
+    APP_PORT:int
+
     DB_HOST_TEST: str
     DB_PORT_TEST: int
     DB_USER_TEST: str
@@ -18,6 +21,7 @@ class Settings(BaseSettings):
     END_POINT_SEND_MESSAGE: str
     END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT:str
     END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT:str
+    END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT:str
 
     @property
     def DATABASE_URL_ASINC(self):
