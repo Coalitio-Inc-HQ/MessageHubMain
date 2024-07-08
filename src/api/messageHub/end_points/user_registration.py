@@ -44,7 +44,7 @@ async def send_notifications_added_waiting_chat(platforms: list[PlatformDTO], ch
     Оповещение платформ о добавлении ожидающего чата
     """
     for platform in platforms:
-        if platform.platform_type == "web":
+        if not platform.platform_type == "bot":
             await send_notification_added_waiting_chat(url=platform.url, chat=chat)
 
 

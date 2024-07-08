@@ -66,7 +66,7 @@ async def connect_to_waiting_chat(background_tasks: BackgroundTasks, user_id: in
 
     # оповещяем что пользователь добавлен в чат                                                                    !!!!!Нужно оповестить все платформы с котороыми связан данный чат
     platform = await get_platform_by_user_id(session=session, user_id=user_id)
-    if platform.platform_type == "web":
+    if not platform.platform_type == "bot":
         background_tasks.add_task(
             send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
 
@@ -78,7 +78,7 @@ async def send_notifications_deleted_waiting_chat(platforms: list[PlatformDTO], 
     Отправка сообщений всем платформам о том, что чат больше не является ожидающим
     """
     for platform in platforms:
-        if platform.platform_type == "web":
+        if not platform.platform_type == "bot":
             await send_notification_deleted_waiting_chat(url=platform.url, chat_id=chat.id)
 
 
@@ -111,7 +111,7 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
     platform = await get_platform_by_user_id(session=session, user_id=user_id)
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь                                        !!!!!Нужно оповестить все платформы с котороыми связан данный чат
-    if platform.platform_type == "web":
+    if not platform.platform_type == "bot":
         background_tasks.add_task(
             send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
 

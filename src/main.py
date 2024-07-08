@@ -51,4 +51,8 @@ async def root(chat_id: int = Body()):
 
 @app.post(settings.END_POINT_SEND_MESSAGE)
 async def root(message: MessageDTO):
-    print(f"webhook sent message message:{message}")
+    print(f"webhook sent message:{message}")
+
+@app.post(settings.END_POINT_SEND_MESSAGE_BROADCAST)
+async def root(message: MessageDTO):
+    print(f"webhook sent message broadcast:{message}")
