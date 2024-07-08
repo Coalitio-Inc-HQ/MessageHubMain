@@ -95,7 +95,7 @@ async def test_get_chats_by_user_user_not_found(ac: AsyncClient):
     assert response.status_code == 200
 
 
-async def test_get_users_by_chat_id_ok(ac: AsyncClient):
+async def test_get_users_by_chat_id_ok1(ac: AsyncClient):
     response1 = await ac.post("/message_service/user_registration/bot", json={"platform_name": "telegram", "name": "Вася"})
     chatusers1 = response1.json()
 
@@ -105,6 +105,15 @@ async def test_get_users_by_chat_id_ok(ac: AsyncClient):
     response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": chatusers2["user_id"], "chat_id": chatusers1["chat_id"]})
 
     users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": chatusers1["user_id"], "chat_id":chatusers1["chat_id"]})
+
+    assert users.status_code == 200
+
+
+async def test_get_users_by_chat_id_ok2(ac: AsyncClient):
+    response1 = await ac.post("/message_service/user_registration/bot", json={"platform_name": "telegram", "name": "Вася"})
+    chatusers1 = response1.json()
+
+    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id":chatusers1["chat_id"]})
 
     assert users.status_code == 200
 
