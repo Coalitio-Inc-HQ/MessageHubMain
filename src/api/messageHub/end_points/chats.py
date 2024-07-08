@@ -38,10 +38,13 @@ async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depe
 
 
 @router.post("/get_users_by_chat_id")
-async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_users_by_chat_id_(user_id:int = Body(),chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает участников чата.
     """
+    if (not await whether_the_user_is_in_the_chat(session=session, chat_id=chat_id, user_id=user_id)):
+        raise HTTPException(
+            status_code=422, detail="Пользователь не находится в данном чате")
     res = await get_users_by_chat_id(session=session, chat_id=chat_id)
     return res
 
