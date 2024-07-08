@@ -101,7 +101,7 @@ async def get_messges_from_chat_(user_id: int = Body(), chat_id: int = Body(), c
     return res
 
 
-@router.post("/get_messages_from__wating_chat")
+@router.post("/get_messages_from_wating_chat")
 async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает сообщения из ожидающего чата.
