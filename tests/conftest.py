@@ -14,17 +14,21 @@ from src.settings import settings
 from src.main import app
 
 # DATABASE
-DATABASE_URL_TEST = f"postgresql+asyncpg://{settings.DB_USER_TEST}:{settings.DB_PASS_TEST}@{settings.DB_HOST_TEST}:{settings.DB_PORT_TEST}/{settings.DB_NAME_TEST}"
+DATABASE_URL_TEST = f"postgresql+asyncpg://{settings.DB_USER_TEST}:{settings.DB_PASS_TEST}@{
+    settings.DB_HOST_TEST}:{settings.DB_PORT_TEST}/{settings.DB_NAME_TEST}"
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
-async_session_maker = sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
+async_session_maker = sessionmaker(
+    engine_test, class_=AsyncSession, expire_on_commit=False)
 Base.metadata.bind = engine_test
+
 
 async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
 
 app.dependency_overrides[get_session] = override_get_session
+
 
 @pytest.fixture(autouse=True, scope='session')
 async def prepare_database():
@@ -35,6 +39,8 @@ async def prepare_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 # SETUP
+
+
 @pytest.fixture(scope='session')
 def event_loop(request):
     """Create an instance of the default event loop for each test case."""
@@ -42,7 +48,9 @@ def event_loop(request):
     yield loop
     loop.close()
 
+
 client = TestClient(app)
+
 
 @pytest.fixture(scope="session")
 async def ac() -> AsyncGenerator[AsyncClient, None]:

@@ -104,7 +104,7 @@ async def test_get_users_by_chat_id_ok1(ac: AsyncClient):
     print(response2.json())
     response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": chatusers2["user_id"], "chat_id": chatusers1["chat_id"]})
     print(2)
-    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": chatusers1["user_id"], "chat_id":chatusers1["chat_id"]})
+    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": chatusers1["user_id"], "chat_id": chatusers1["chat_id"]})
 
     assert users.status_code == 200
 
@@ -113,7 +113,7 @@ async def test_get_users_by_chat_id_ok2(ac: AsyncClient):
     response1 = await ac.post("/message_service/user_registration/bot", json={"platform_name": "telegram", "name": "Вася"})
     chatusers1 = response1.json()
 
-    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id":chatusers1["chat_id"]})
+    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id": chatusers1["chat_id"]})
 
     assert users.status_code == 200
 
@@ -136,7 +136,7 @@ async def test_get_users_by_chat_id_user_not_found(ac: AsyncClient):
 
     response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": chatusers2["user_id"], "chat_id": chatusers1["chat_id"]})
 
-    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id":chatusers1["chat_id"]})
+    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id": chatusers1["chat_id"]})
 
     assert users.status_code == 422
 
@@ -204,7 +204,7 @@ async def test_get_messages_from_chat_ok(ac: AsyncClient):
     response = await ac.post("/message_service/send_a_message_to_chat", json={"id": 0, "chat_id": chatusers["chat_id"], "sender_id": chatusers["user_id"], "sended_at": date_time_convert(datetime.datetime.now()), "text": "xafasdfas"})
     mesg = response.json()
 
-    response2 = await ac.post("/message_service/get_messages_from_chat", json={"user_id": chatusers['user_id'],"chat_id": chatusers['chat_id'], "count": 10, "offset_message_id": -1})
+    response2 = await ac.post("/message_service/get_messages_from_chat", json={"user_id": chatusers['user_id'], "chat_id": chatusers['chat_id'], "count": 10, "offset_message_id": -1})
 
     assert response2.status_code == 200
 
@@ -228,7 +228,7 @@ async def test_get_messages_from_chat_user(ac: AsyncClient):
     response = await ac.post("/message_service/send_a_message_to_chat", json={"id": 0, "chat_id": chatusers["chat_id"], "sender_id": chatusers["user_id"], "sended_at": date_time_convert(datetime.datetime.now()), "text": "xafasdfas"})
     mesg = response.json()
 
-    response2 = await ac.post("/message_service/get_messages_from_chat", json={"user_id": -1,"chat_id": chatusers['chat_id'], "count": 10, "offset_message_id": -1})
+    response2 = await ac.post("/message_service/get_messages_from_chat", json={"user_id": -1, "chat_id": chatusers['chat_id'], "count": 10, "offset_message_id": -1})
 
     assert response2.status_code == 422
 
@@ -253,7 +253,7 @@ async def test_get_messages_from_wating_chat_not_wating_chat(ac: AsyncClient):
     chatusers2 = response2.json()
 
     response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": chatusers2["user_id"], "chat_id": chatusers1["chat_id"]})
-    
+
     response = await ac.post("/message_service/send_a_message_to_chat", json={"id": 0, "chat_id": chatusers1["chat_id"], "sender_id": chatusers1["user_id"], "sended_at": date_time_convert(datetime.datetime.now()), "text": "xafasdfas"})
     mesg = response.json()
 

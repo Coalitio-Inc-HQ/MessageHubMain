@@ -13,7 +13,7 @@ from .end_points.messages import router as message_router
 
 router = APIRouter(prefix="/message_service")
 
-router.include_router(platform_router)
-router.include_router(user_registration_router)
-router.include_router(chat_router)
-router.include_router(message_router)
+router.include_router(platform_router, tags=["platform"])
+router.include_router(user_registration_router, tags=["user"])
+router.include_router(chat_router, tags=["chat"])
+router.include_router(message_router, tags=["message"])
