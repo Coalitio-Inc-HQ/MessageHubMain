@@ -67,11 +67,24 @@ async def connect_to_waiting_chat(background_tasks: BackgroundTasks, user_id: in
     background_tasks.add_task(
         send_notifications_deleted_waiting_chat, platforms=platforms, chat=chat)
 
-    # оповещяем что пользователь добавлен в чат                                                                    !!!!!Нужно оповестить все платформы с котороыми связан данный чат
-    platform = await get_platform_by_user_id(session=session, user_id=user_id)
-    if not platform.platform_type == "bot":
-        background_tasks.add_task(
-            send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
+    """
+    Нужночто-то сделать с платформами !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    """
+    user = await get_user_by_user_id(session=session,user_id=user_id)
+
+    platforms = await get_platforms_by_chat_id(session=session,chat_id=chat_id)
+    
+    is_fund_platform = False
+    for platf in platforms:
+        if platf.id == user.platform_id:
+            is_fund_platform=True
+            break
+    
+    if not is_fund_platform:
+        platforms.append(platform = await get_platform_by_user_id(session=session, user_id=user_id))
+
+    # оповещяем платформу о том, что в чат был добавленн новый пользователь
+    await send_notifications_user_added_to_chat(platforms=platforms,user=user,chat=chat)
 
     return res
 
@@ -82,16 +95,16 @@ async def send_notifications_deleted_waiting_chat(platforms: list[PlatformDTO], 
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_notification_deleted_waiting_chat(url=platform.url, chat_id=chat.id)
+            await send_notification_deleted_waiting_chat(url=platform.url, chat=chat)
 
 
-async def send_notification_deleted_waiting_chat(url: str, chat_id: int):
+async def send_notification_deleted_waiting_chat(url: str, chat: ChatDTO):
     """
     Отправка сообщения о том что, чат больше не является ожидающим
     """
     async with AsyncClient(base_url=url) as clinet:
         try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT, json=str(chat_id))
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT, json=chat.model_dump())
             response.raise_for_status()
         except Exception as e:
             print(
@@ -111,23 +124,41 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
             status_code=422, detail="Ползователь уже находится в чате")
 
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
-    platform = await get_platform_by_user_id(session=session, user_id=user_id)
+    user = await get_user_by_user_id(session=session,user_id=user_id)
 
-    # оповещяем платформу о том, что в чат был добавленн новый пользователь                                        !!!!!Нужно оповестить все платформы с котороыми связан данный чат
-    if not platform.platform_type == "bot":
-        background_tasks.add_task(
-            send_notification_user_added_to_chat, url=platform.url, user_id=user_id, chat=chat)
+    platforms = await get_platforms_by_chat_id(session=session,chat_id=chat_id)
+    
+    is_fund_platform = False
+    for platf in platforms:
+        if platf.id == user.platform_id:
+            is_fund_platform=True
+            break
+    
+    if not is_fund_platform:
+        platforms.append(platform = await get_platform_by_user_id(session=session, user_id=user_id))
+
+    # оповещяем платформу о том, что в чат был добавленн новый пользователь
+    await send_notifications_user_added_to_chat(platforms=platforms,user=user,chat=chat)
 
     return res
 
 
-async def send_notification_user_added_to_chat(url: str, user_id: int, chat: ChatDTO):
+async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO],user: UserDTO, chat: ChatDTO):
+    """
+    Отправка сообщений всем платформам о том, что пользователь добавлен в чат
+    """
+    for platform in platforms:
+        if not platform.platform_type == "bot":
+            await send_notification_user_added_to_chat(url=platform.url, user=user,chat = chat)
+
+
+async def send_notification_user_added_to_chat(url: str, user: UserDTO, chat: ChatDTO):
     """
     Отправка сообщения о том, что в чат был добавленн новый пользователь
     """
     async with AsyncClient(base_url=url) as clinet:
         try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user_id": user_id, "chat": chat.model_dump()})
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
             response.raise_for_status()
         except Exception as e:
             print(

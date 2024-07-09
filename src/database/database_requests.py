@@ -201,6 +201,13 @@ async def is_waiting_chat(session: AsyncSession,chat_id:int)->bool:
     else:
         return False
 
+async def get_user_by_user_id(session: AsyncSession,user_id:int) -> UserDTO:
+    """
+    Получаем пользователя по id
+    """
+    res = await(session.execute(select(UserORM).where(UserORM.id==user_id)))
+    return UserDTO.model_validate(res.scalar(),from_attributes=True)
+
 """
 temp
 """

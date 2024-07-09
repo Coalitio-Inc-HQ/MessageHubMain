@@ -181,3 +181,12 @@ async def test_is_waiting_chat_2():
         res = await is_waiting_chat(session=session,chat_id=bot.chat_id)
 
         assert res == False
+
+
+async def test_get_user_by_user_id():
+    async with async_session_maker() as session:
+        bot = await bot_user_registration(session=session, platform_name="telga", name="asxd")
+
+        res = await get_user_by_user_id(session=session,user_id=bot.user_id)
+
+        assert res.id == bot.user_id

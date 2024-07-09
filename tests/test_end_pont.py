@@ -101,9 +101,9 @@ async def test_get_users_by_chat_id_ok1(ac: AsyncClient):
 
     response2 = await ac.post("/message_service/user_registration/web", json={"platform_name": "web", "name": "AAAaaaa"})
     chatusers2 = response2.json()
-
+    print(response2.json())
     response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": chatusers2["user_id"], "chat_id": chatusers1["chat_id"]})
-
+    print(2)
     users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": chatusers1["user_id"], "chat_id":chatusers1["chat_id"]})
 
     assert users.status_code == 200
