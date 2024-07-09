@@ -1,3 +1,4 @@
 #!/bin/bash
+ls
 alembic upgrade head 
-python run_seerver.py
+python run_server.py
