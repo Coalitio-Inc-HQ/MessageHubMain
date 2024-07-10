@@ -36,53 +36,49 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
             break
 
     if is_wating_chat:
+        platforms = await get_all_platform(session=session)
         background_tasks.add_task(
-            send_messge_broadcast, session=session, message=message)
+            send_messge_broadcast, platforms=platforms, message=message)
     else:
+        platforms = await get_platforms_by_chat_id(session=session, chat_id=message.chat_id)
         background_tasks.add_task(
-            send_messge, session=session, message=message)
+            send_messge_normal, platforms=platforms, message=message)
 
     return {"status": "ok"}
 
 
-async def send_messge(session: AsyncSession, message: MessageDTO):
+async def send_messge_normal(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения платформам
     """
-    platforms = await get_platforms_by_chat_id(session=session, chat_id=message.chat_id)
     for platform in platforms:
-
-        async with AsyncClient(base_url=platform.url) as clinet:
-            try:
-                response = await clinet.post(settings.END_POINT_SEND_MESSAGE, json={"id": message.id, "chat_id": message.chat_id, "sender_id": message.sender_id, "sended_at": date_time_convert(message.sended_at), "text": message.text})
-                response.raise_for_status()
-            except Exception as err:
-                print(f"Ошибка отправки сообщения Error: {err}")
-                logger.error(f"Error: {err}")
+        await send_message(platform, message)
 
 
-async def send_messge_broadcast(session: AsyncSession, message: MessageDTO):
+async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения из ожидающего чата всем платформам
     """
-    platforms = await get_all_platform(session=session)
     for platform in platforms:
         if not platform.platform_type == "bot":
-            async with AsyncClient(base_url=platform.url) as clinet:
+            await send_message(platform, message)
+
+
+async def send_message(platform: PlatformDTO,  message: MessageDTO):
+    """
+    Отправка сообщения платформе
+    """
+    async with AsyncClient(base_url=platform.url) as clinet:
                 try:
-                    response = await clinet.post(settings.END_POINT_SEND_MESSAGE_BROADCAST, json={"id": message.id, "chat_id": message.chat_id, "sender_id": message.sender_id, "sended_at": date_time_convert(message.sended_at), "text": message.text})
+                    dict_message = message.model_dump()
+                    dict_message["sended_at"] = message.sended_at.isoformat()
+                    response = await clinet.post(settings.END_POINT_SEND_MESSAGE_BROADCAST, json=dict_message)
                     response.raise_for_status()
                 except Exception as err:
-                    print(f"Ошибка отправки сообщения из ожидающего чата Error: {err}")
+                    print(
+                        f"Ошибка отправки сообщения из ожидающего чата Error: {err}")
                     logger.error(f"Error: {err}")
-
-
-def date_time_convert(t: datetime.datetime) -> str:
-    """
-    Приведение даты-время к стандартному формату
-    """
-    return f"{t.year:04}-{t.month:02}-{t.day:02}T{t.hour:02}:{t.minute:02}:{t.second:02}.{t.microsecond:03}Z"
-
+    
 
 @router.post("/get_messages_from_chat")
 async def get_messges_from_chat_(user_id: int = Body(), chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
@@ -92,7 +88,7 @@ async def get_messges_from_chat_(user_id: int = Body(), chat_id: int = Body(), c
     if (count < 0):
         raise HTTPException(status_code=422, detail="count<0")
 
-    # Добавить проверку принадлежности к чату
+    # Проверяем принадлежит ли пользователь чату
     if (not await whether_the_user_is_in_the_chat(session=session, chat_id=chat_id, user_id=user_id)):
         raise HTTPException(
             status_code=422, detail="Пользователь не находится в данном чате")
@@ -109,8 +105,8 @@ async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), off
     if (count < 0):
         raise HTTPException(status_code=422, detail="count<0")
 
-    # Добавить проверку принадлежности к чату
-    if not await is_waiting_chat(session=session,chat_id=chat_id):
+    # Проверяем является ли чат ожидающим
+    if not await is_waiting_chat(session=session, chat_id=chat_id):
         raise HTTPException(
             status_code=422, detail="Чат не является ожидающим")
 

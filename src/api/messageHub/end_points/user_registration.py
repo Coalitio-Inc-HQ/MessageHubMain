@@ -14,6 +14,9 @@ router = APIRouter()
 
 
 class UserIn(BaseModel):
+    """
+    Модель входных данных для регистрации пользователя
+    """
     platform_name: str = Field(max_length=30)
     name: str = Field(max_length=256)
 
@@ -29,6 +32,7 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
         logger.info(err)
         raise HTTPException(status_code=422, detail="Платформа не найдена")
 
+    # получаем мнформацию для оповещения платформ
     platforms = await get_all_platform(session=session)
     chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
 
@@ -50,11 +54,11 @@ async def send_notifications_added_waiting_chat(platforms: list[PlatformDTO], ch
 
 async def send_notification_added_waiting_chat(url: str, chat: ChatDTO):
     """
-    Отправка о добавлении ожидающего чата
+    Отправка сообщения о добавлении ожидающего чата
     """
     async with AsyncClient(base_url=url) as clinet:
         try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT, json={"id": chat.id, "name": chat.name})
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT, json=chat.model_dump())
             response.raise_for_status()
         except Exception as e:
             print(

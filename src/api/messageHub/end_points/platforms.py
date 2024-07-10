@@ -8,6 +8,9 @@ router = APIRouter()
 
 
 class PlatformIn(BaseModel):
+    """
+    Модель входных данных для регистрации платформы
+    """
     platform_name: str = Field(max_length=30)
     url: str = Field(max_length=256)
 

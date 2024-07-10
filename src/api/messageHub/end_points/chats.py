@@ -33,18 +33,21 @@ async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depe
     """
     Возвращает чаты пользователя.
     """
+    # Надо ли проверять существование пользователя?
     res = await get_chats_by_user_id(session=session, user_id=user_id)
     return res
 
 
 @router.post("/get_users_by_chat_id")
-async def get_users_by_chat_id_(user_id:int = Body(),chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_users_by_chat_id_(user_id: int = Body(), chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает участников чата.
     """
-    if (not await whether_the_user_is_in_the_chat(session=session, chat_id=chat_id, user_id=user_id) and not await is_waiting_chat(session=session,chat_id=chat_id)):
+    # Проверяем принадлежность пользователя к чату
+    if (not await whether_the_user_is_in_the_chat(session=session, chat_id=chat_id, user_id=user_id) and not await is_waiting_chat(session=session, chat_id=chat_id)):
         raise HTTPException(
             status_code=422, detail="Пользователь не находится в данном чате")
+    
     res = await get_users_by_chat_id(session=session, chat_id=chat_id)
     return res
 
@@ -60,6 +63,7 @@ async def connect_to_waiting_chat(background_tasks: BackgroundTasks, user_id: in
         raise HTTPException(
             status_code=422, detail="Ползователь уже находится в чате")
 
+    # получаем нужную информацию для оповещения
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
     platforms = await get_all_platform(session=session)
 
@@ -69,22 +73,24 @@ async def connect_to_waiting_chat(background_tasks: BackgroundTasks, user_id: in
 
     """
     Нужночто-то сделать с платформами !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    И убрать дублирование с connect_to_chat
     """
-    user = await get_user_by_user_id(session=session,user_id=user_id)
+    user = await get_user_by_user_id(session=session, user_id=user_id)
 
-    platforms = await get_platforms_by_chat_id(session=session,chat_id=chat_id)
-    
+    platforms = await get_platforms_by_chat_id(session=session, chat_id=chat_id)
+
+    # проверяем присудствует ли платформа добовляемого пользователя в списке
     is_fund_platform = False
     for platf in platforms:
         if platf.id == user.platform_id:
-            is_fund_platform=True
+            is_fund_platform = True
             break
-    
+
     if not is_fund_platform:
-        platforms.append(platform = await get_platform_by_user_id(session=session, user_id=user_id))
+        platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь
-    await send_notifications_user_added_to_chat(platforms=platforms,user=user,chat=chat)
+    await send_notifications_user_added_to_chat(platforms=platforms, user=user, chat=chat)
 
     return res
 
@@ -123,33 +129,35 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
         raise HTTPException(
             status_code=422, detail="Ползователь уже находится в чате")
 
+    # получаем нужную информацию для оповещения
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
-    user = await get_user_by_user_id(session=session,user_id=user_id)
+    user = await get_user_by_user_id(session=session, user_id=user_id)
 
-    platforms = await get_platforms_by_chat_id(session=session,chat_id=chat_id)
-    
+    platforms = await get_platforms_by_chat_id(session=session, chat_id=chat_id)
+
+    # проверяем присудствует ли платформа добовляемого пользователя в списке
     is_fund_platform = False
     for platf in platforms:
         if platf.id == user.platform_id:
-            is_fund_platform=True
+            is_fund_platform = True
             break
-    
+
     if not is_fund_platform:
-        platforms.append(platform = await get_platform_by_user_id(session=session, user_id=user_id))
+        platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь
-    await send_notifications_user_added_to_chat(platforms=platforms,user=user,chat=chat)
+    await send_notifications_user_added_to_chat(platforms=platforms, user=user, chat=chat)
 
     return res
 
 
-async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO],user: UserDTO, chat: ChatDTO):
+async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO):
     """
     Отправка сообщений всем платформам о том, что пользователь добавлен в чат
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_notification_user_added_to_chat(url=platform.url, user=user,chat = chat)
+            await send_notification_user_added_to_chat(url=platform.url, user=user, chat=chat)
 
 
 async def send_notification_user_added_to_chat(url: str, user: UserDTO, chat: ChatDTO):
