@@ -13,6 +13,8 @@ from src.database.models import Base
 from src.settings import settings
 from src.main import app
 
+from tests.insert_test_data import ins
+
 import uvicorn
 
 # DATABASE
@@ -32,5 +34,9 @@ async def prepare_database():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    
+    async with async_session_maker() as session:
+        await ins(session=session)
 
+asyncio.run(prepare_database())
 uvicorn.run(app, host=settings.APP_HOST, port=settings.APP_PORT)
