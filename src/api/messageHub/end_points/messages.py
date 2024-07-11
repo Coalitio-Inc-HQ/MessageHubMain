@@ -44,7 +44,7 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
         background_tasks.add_task(
             send_messge_normal, platforms=platforms, message=message)
 
-    return {"status": "ok"}
+    return {"message_id": res.id}
 
 
 async def send_messge_normal(platforms: list[PlatformDTO], message: MessageDTO):
