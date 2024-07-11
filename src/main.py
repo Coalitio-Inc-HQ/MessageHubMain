@@ -47,7 +47,7 @@ async def root(chat: ChatDTO, user_id: int = Body()):
     print(f"webhook add user to chat user_id:{user_id} chat:{chat}")
 
 
-@router_test.post(settings.END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT)
+@router_test.post(settings.END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT)
 async def root(chat_id: int = Body()):
     print(f"webhook deleted waiting chat chat_id:{chat_id}")
 

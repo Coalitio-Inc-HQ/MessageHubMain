@@ -110,7 +110,7 @@ async def send_notification_deleted_waiting_chat(url: str, chat: ChatDTO):
     """
     async with AsyncClient(base_url=url) as clinet:
         try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELITED_WAITING_CHAT, json=chat.model_dump())
+            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT, json=chat.model_dump())
             response.raise_for_status()
         except Exception as e:
             print(
