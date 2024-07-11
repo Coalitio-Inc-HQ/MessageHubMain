@@ -1,4 +1,2 @@
 #!/bin/bash
-ls
-alembic upgrade head 
-python run_server.py
+sleep 10 && alembic upgrade head && python run_server.py  
