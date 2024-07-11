@@ -52,7 +52,7 @@ async def send_messge_normal(platforms: list[PlatformDTO], message: MessageDTO):
     Отправка сообщения платформам
     """
     for platform in platforms:
-        await send_message(platform, message)
+        await send_message(platform, message, settings.END_POINT_SEND_MESSAGE)
 
 
 async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO):
@@ -61,10 +61,10 @@ async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDT
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_message(platform, message)
+            await send_message(platform, message,settings.END_POINT_SEND_MESSAGE_BROADCAST )
 
 
-async def send_message(platform: PlatformDTO,  message: MessageDTO):
+async def send_message(platform: PlatformDTO,  message: MessageDTO, ur:str):
     """
     Отправка сообщения платформе
     """
@@ -72,7 +72,7 @@ async def send_message(platform: PlatformDTO,  message: MessageDTO):
                 try:
                     dict_message = message.model_dump()
                     dict_message["sended_at"] = message.sended_at.isoformat()
-                    response = await clinet.post(settings.END_POINT_SEND_MESSAGE_BROADCAST, json=dict_message)
+                    response = await clinet.post(ur, json=dict_message)
                     response.raise_for_status()
                 except Exception as err:
                     print(
