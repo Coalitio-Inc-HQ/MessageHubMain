@@ -1,0 +1,9 @@
+version: "2" 
+authtoken: <Токен>
+tunnels:
+  httpbin:
+    proto: http
+    schemes: 
+        - https
+    addr: http://app:8001
+    domain: <Домен>

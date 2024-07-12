@@ -21,4 +21,14 @@ services:
       - 8001:8001
     depends_on:
       - db
-    
+
+  ngrok:
+        image: ngrok/ngrok:latest
+        restart: unless-stopped
+        command:
+          - "start"
+          - "--all"
+          - "--config"
+          - "/etc/ngrok.yml"
+        volumes:
+          - ./ngrok.yml:/etc/ngrok.yml
