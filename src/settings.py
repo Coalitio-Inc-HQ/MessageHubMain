@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from typing import List
 
 class Settings(BaseSettings):
     DB_HOST: str
@@ -24,9 +24,15 @@ class Settings(BaseSettings):
     END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT: str
     END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT: str
 
+    BACKEND_CORS_ORIGINS: str
+
     @property
     def DATABASE_URL_ASINC(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    @property
+    def BACKEND_CORS_ORIGINS(self):
+        return self.BACKEND_CORS_ORIGINS.split(",")
 
     model_config = SettingsConfigDict(env_file=".env")
 

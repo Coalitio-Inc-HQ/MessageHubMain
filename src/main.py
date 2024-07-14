@@ -8,19 +8,12 @@ from .settings import settings
 
 from .database.schemes import ChatDTO, MessageDTO
 
-origins = [
-    "http://localhost:8000",
-    "http://localhost:8001",
-    "http://localhost:8002",
-    "http://localhost:8003"
-]
-
-
 app = FastAPI()
 
+print("BACKEND_CORS_ORIGINS:", settings.BACKEND_CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
