@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, BackgroundTasks
 from ....database.session_database import get_session, AsyncSession
 from ....database.database_requests import *
-from httpx import AsyncClient
 from ....settings import settings
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
+from src.loging.logging_utility import log, LogMessage,log_en
+from src.api.messageHub.utils import send_http_request
 
 import logging
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -29,7 +28,12 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
     try:
         res = await bot_user_registration(session=session, platform_name=user.platform_name, name=user.name)
     except IntegrityError as err:
-        logger.info(err)
+        log(LogMessage(time=None,heder="Платформа не найдена.", 
+                   heder_dict=err.args,body=
+                    {
+                        "user":user
+                    },
+                    level=log_en.ERROR))
         raise HTTPException(status_code=422, detail="Платформа не найдена")
 
     # получаем мнформацию для оповещения платформ
@@ -49,21 +53,7 @@ async def send_notifications_added_waiting_chat(platforms: list[PlatformDTO], ch
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_notification_added_waiting_chat(url=platform.url, chat=chat)
-
-
-async def send_notification_added_waiting_chat(url: str, chat: ChatDTO):
-    """
-    Отправка сообщения о добавлении ожидающего чата
-    """
-    async with AsyncClient(base_url=url) as clinet:
-        try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT, json=chat.model_dump())
-            response.raise_for_status()
-        except Exception as e:
-            print(
-                f"Ошибка отправки сообщения о добавлении ожидающего чата: {e}")
-            logger.error(f"Error: {e}")
+            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT,json=chat.model_dump())
 
 
 @router.post("/user_registration/web")
@@ -74,7 +64,12 @@ async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_ses
     try:
         res = await user_registration(session=session, platform_name=user.platform_name, name=user.name)
     except IntegrityError as err:
-        logger.info(err)
+        log(LogMessage(time=None,heder="Платформа не найдена.", 
+                   heder_dict=err.args,body=
+                    {
+                        "user":user
+                    },
+                    level=log_en.ERROR))
         raise HTTPException(status_code=422, detail="Платформа не найдена")
 
     return {"user_id": res.id}

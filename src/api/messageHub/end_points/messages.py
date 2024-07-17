@@ -10,7 +10,9 @@ from pydantic import BaseModel
 
 import logging
 
-logger = logging.getLogger(__name__)
+from src.loging.logging_utility import log, LogMessage,log_en
+from src.api.messageHub.utils import send_http_request
+
 
 router = APIRouter()
 
@@ -51,33 +53,37 @@ async def send_messge_normal(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения платформам
     """
+    dict_message = message.model_dump()
+    dict_message["sended_at"] = message.sended_at.isoformat()
     for platform in platforms:
-        await send_message(platform, message, settings.END_POINT_SEND_MESSAGE)
+        await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE,json=dict_message)
 
 
 async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения из ожидающего чата всем платформам
     """
+    dict_message = message.model_dump()
+    dict_message["sended_at"] = message.sended_at.isoformat()
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_message(platform, message,settings.END_POINT_SEND_MESSAGE_BROADCAST )
+            await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE_BROADCAST,json=dict_message)
 
 
-async def send_message(platform: PlatformDTO,  message: MessageDTO, ur:str):
-    """
-    Отправка сообщения платформе
-    """
-    async with AsyncClient(base_url=platform.url) as clinet:
-                try:
-                    dict_message = message.model_dump()
-                    dict_message["sended_at"] = message.sended_at.isoformat()
-                    response = await clinet.post(ur, json=dict_message)
-                    response.raise_for_status()
-                except Exception as err:
-                    print(
-                        f"Ошибка отправки сообщения из ожидающего чата Error: {err}")
-                    logger.error(f"Error: {err}")
+# async def send_message(platform: PlatformDTO,  message: MessageDTO, ur:str):
+#     """
+#     Отправка сообщения платформе
+#     """
+#     async with AsyncClient(base_url=platform.url) as clinet:
+#                 try:
+#                     dict_message = message.model_dump()
+#                     dict_message["sended_at"] = message.sended_at.isoformat()
+#                     response = await clinet.post(ur, json=dict_message)
+#                     response.raise_for_status()
+#                 except Exception as err:
+#                     print(
+#                         f"Ошибка отправки сообщения из ожидающего чата Error: {err}")
+#                     logger.error(f"Error: {err}")
     
 
 @router.post("/get_messages_from_chat")

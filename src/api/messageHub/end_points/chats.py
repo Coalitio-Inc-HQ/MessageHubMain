@@ -8,9 +8,10 @@ from ....settings import settings
 
 from pydantic import BaseModel
 
-import logging
+from src.loging.logging_utility import log, LogMessage,log_en
+from src.api.messageHub.utils import send_http_request
 
-logger = logging.getLogger(__name__)
+import logging
 
 
 router = APIRouter()
@@ -101,21 +102,21 @@ async def send_notifications_deleted_waiting_chat(platforms: list[PlatformDTO], 
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_notification_deleted_waiting_chat(url=platform.url, chat=chat)
+            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT, json=chat.model_dump())
 
 
-async def send_notification_deleted_waiting_chat(url: str, chat: ChatDTO):
-    """
-    Отправка сообщения о том что, чат больше не является ожидающим
-    """
-    async with AsyncClient(base_url=url) as clinet:
-        try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT, json=chat.model_dump())
-            response.raise_for_status()
-        except Exception as e:
-            print(
-                f"Ошибка отправки сообщения о том, что чат больше не является ожидающим: {e}")
-            logger.error(f"Error: {e}")
+# async def send_notification_deleted_waiting_chat(url: str, chat: ChatDTO):
+#     """
+#     Отправка сообщения о том что, чат больше не является ожидающим
+#     """
+#     async with AsyncClient(base_url=url) as clinet:
+#         try:
+#             response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_DELETED_WAITING_CHAT, json=chat.model_dump())
+#             response.raise_for_status()
+#         except Exception as e:
+#             print(
+#                 f"Ошибка отправки сообщения о том, что чат больше не является ожидающим: {e}")
+#             logger.error(f"Error: {e}")
 
 
 @router.post("/connect_user_to_chat")
@@ -157,18 +158,19 @@ async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], us
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_notification_user_added_to_chat(url=platform.url, user=user, chat=chat)
+            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
+            # await send_notification_user_added_to_chat(url=platform.url, user=user, chat=chat)
 
 
-async def send_notification_user_added_to_chat(url: str, user: UserDTO, chat: ChatDTO):
-    """
-    Отправка сообщения о том, что в чат был добавленн новый пользователь
-    """
-    async with AsyncClient(base_url=url) as clinet:
-        try:
-            response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
-            response.raise_for_status()
-        except Exception as e:
-            print(
-                f"Ошибка отправки сообщения о том, что в чат был добавленн новый пользователь: {e}")
-            logger.error(f"Error: {e}")
+# async def send_notification_user_added_to_chat(url: str, user: UserDTO, chat: ChatDTO):
+#     """
+#     Отправка сообщения о том, что в чат был добавленн новый пользователь
+#     """
+#     async with AsyncClient(base_url=url) as clinet:
+#         try:
+#             response = await clinet.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
+#             response.raise_for_status()
+#         except Exception as e:
+#             print(
+#                 f"Ошибка отправки сообщения о том, что в чат был добавленн новый пользователь: {e}")
+            # logger.error(f"Error: {e}")

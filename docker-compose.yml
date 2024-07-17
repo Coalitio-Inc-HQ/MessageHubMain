@@ -1,15 +1,15 @@
 version: "3.7"
 services:
-  db:
-    image: postgres:16
-    container_name: db_app
-    command: -p 5430
-    expose:
-      - 5430
-    env_file:
-      - .env-db
-    ports:
-      - 5430:5430
+  # db:
+    # image: postgres:16
+    # container_name: db_app
+    # command: -p 5430
+    # expose:
+    #   - 5430
+    # env_file:
+    #   - .env-db
+    # ports:
+    #   - 5430:5430
   
   app:
     build:
@@ -19,16 +19,7 @@ services:
     container_name: app
     ports:
       - 8001:8001
-    depends_on:
-      - db
-
-  ngrok:
-        image: ngrok/ngrok:latest
-        restart: unless-stopped
-        command:
-          - "start"
-          - "--all"
-          - "--config"
-          - "/etc/ngrok.yml"
-        volumes:
-          - ./ngrok.yml:/etc/ngrok.yml
+    # depends_on:
+    #   - db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
