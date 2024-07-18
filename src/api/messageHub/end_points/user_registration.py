@@ -40,14 +40,15 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
     platforms = await get_all_platform(session=session)
     chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
 
-    # Оповещяем о добавлении ожидающего чата
+    # Оповещяем о добавлении чата
     background_tasks.add_task(
-        send_notifications_added_waiting_chat, platforms=platforms, chat=chat)
+        send_notifications_added_chat, platforms=platforms, chat=chat)
 
+    log(LogMessage(time=None,heder="Зарегистрирован пользователь из бота.", heder_dict=user,body={"user":user,"chat":chat},level=log_en.DEBUG))
     return {"user_id": res.user_id, "chat_id": res.chat_id}
 
 
-async def send_notifications_added_waiting_chat(platforms: list[PlatformDTO], chat: ChatDTO):
+async def send_notifications_added_chat(platforms: list[PlatformDTO], chat: ChatDTO):
     """
     Оповещение платформ о добавлении ожидающего чата
     """
@@ -72,4 +73,5 @@ async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_ses
                     level=log_en.ERROR))
         raise HTTPException(status_code=422, detail="Платформа не найдена")
 
+    log(LogMessage(time=None,heder="Зарегистрирован пользователь из web.", heder_dict=user,body={"user":res},level=log_en.DEBUG))
     return {"user_id": res.id}

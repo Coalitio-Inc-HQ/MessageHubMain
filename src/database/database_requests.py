@@ -97,15 +97,12 @@ async def get_platforms_by_chat_id(session: AsyncSession, chat_id: int) -> list[
     return res_dto
 
 
-async def get_list_of_waiting_chats(session: AsyncSession, count: int) -> list[ChatDTO]:
+async def get_list_of_chats_in_which_user_is_not_member(session: AsyncSession, user_id: int) -> list[ChatDTO]:
     """
-    Возращяет список всех ожидающих чатов.
+    Возращяет список всех чатов, в которых не состоит пользователь.
     """
-    res = None
-    if count < 0:
-        res = await session.execute(select(ChatORM).join(WaitingСhatORM))
-    else:
-        res = await session.execute(select(ChatORM).join(WaitingСhatORM).limit(count))
+    subq = select(ChatUsersORM.chat_id).where(ChatUsersORM.user_id==user_id)
+    res = await session.execute(select(ChatORM).where(ChatORM.id.not_in(subq)))
     res_orm = res.scalars()
     res_dto = [ChatDTO.model_validate(
         row, from_attributes=True) for row in res_orm]

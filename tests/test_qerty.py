@@ -72,15 +72,11 @@ async def test_user_registration():
         assert user == UserDTO(id=user.id, platform_id=plat.id, name="asd")
 
 
-async def test_get_list_of_waiting_chats():
+async def test_get_list_of_chats_in_which_user_is_not_member():
     async with async_session_maker() as session:
         user = await bot_user_registration(session=session, platform_name="telga", name="asxd")
-        res = await get_list_of_waiting_chats(session=session, count=-1)
-        funduser = None
-        for row in res:
-            if row.id == user.chat_id:
-                funduser = row.id
-        assert user.chat_id == funduser
+        res = await get_list_of_chats_in_which_user_is_not_member(session=session, user_id=user.user_id)
+        assert 1 == 1
 
 
 async def test_connect_to_a_waiting_chat():

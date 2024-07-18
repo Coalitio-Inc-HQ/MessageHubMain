@@ -21,6 +21,7 @@ async def registr_platform(platform_type: str, platform: PlatformIn, session: As
     """
     Регистрирует платформу бота.
     """
+
     if len(platform_type) > 3:
         raise HTTPException(status_code=422, detail="len(platform_type)>3")
     platforms = await get_platforms_by_name(session=session, platform_name=platform.platform_name)
@@ -28,9 +29,9 @@ async def registr_platform(platform_type: str, platform: PlatformIn, session: As
     # перезваписываем url если платформа уже существует
     if not len(platforms) == 0:
         await update_platforms_by_name(session=session, platform_name=platform.platform_name, url=platform.url)
-        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict=None,body={"platform":platforms[0]},level=log_en.INFO))
+        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform":platforms[0]},level=log_en.INFO))
         return {"status": "ok"}
     else:
         plat = await platform_registration(session=session, platform_type=platform_type, platform_name=platform.platform_name, url=platform.url)
-        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict=None,body={"platform":plat},level=log_en.INFO))
+        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform":plat},level=log_en.INFO))
         return {"status": "ok"}

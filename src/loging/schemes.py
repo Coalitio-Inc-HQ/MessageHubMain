@@ -5,6 +5,7 @@ from typing import Any
 class log_en (Enum):
     INFO = "info"
     ERROR = "error"
+    DEBUG = "debug"
 
 
 class LogMessage (BaseModel):

@@ -1,9 +1,10 @@
 import logging
 from src.loging.logger import json_logger
-from .schemes import LogMessage,log_en
+from .schemes import LogMessage, log_en
 import datetime
 
 cmd_logger = logging.getLogger(__name__)
+
 
 def log_info(messege: LogMessage):
     cmd_logger.info(f"INFO: {messege.heder}")
@@ -12,6 +13,7 @@ def log_info(messege: LogMessage):
 
     json_logger.info(messege.model_dump_json())
 
+
 def log_error(messege: LogMessage):
     cmd_logger.error(f"ERROR: {messege.heder}")
 
@@ -19,10 +21,21 @@ def log_error(messege: LogMessage):
 
     json_logger.error(messege.model_dump_json())
 
+
+def log_debug(messege: LogMessage):
+    cmd_logger.debug(f"DEBUG: {messege.heder}")
+
+    cmd_logger.debug(messege.model_dump_json())
+
+    json_logger.debug(messege.model_dump_json())
+
+
 log_swith = {
     log_en.INFO: log_info,
-    log_en.ERROR:log_error
+    log_en.ERROR: log_error,
+    log_en.DEBUG: log_debug,
 }
+
 
 def log(messege: LogMessage):
     messege.time = datetime.datetime.now().isoformat()

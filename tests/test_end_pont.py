@@ -122,15 +122,10 @@ async def test_user_registration_web_platform_not_fund(ac: AsyncClient):
     assert response.status_code == 422
 
 
-async def test_get_list_of_waiting_chats_ok(ac: AsyncClient):
-    response = await ac.post("/message_service/get_list_of_waiting_chats", json='10')
+async def test_get_chats_in_which_user_is_not_member_ok(ac: AsyncClient):
+    response = await ac.post("/message_service/get_chats_in_which_user_is_not_member", json=WEB1_USER.id)
     js = response.json()
     assert js == [BOT1_CHAT.model_dump()]
-
-
-async def test_get_list_of_waiting_chats_count(ac: AsyncClient):
-    response = await ac.post("/message_service/get_list_of_waiting_chats", json='-1')
-    assert response.status_code == 422
 
 
 async def test_get_chats_by_user_ok(ac: AsyncClient):
@@ -146,9 +141,9 @@ async def test_get_chats_by_user_user_not_found(ac: AsyncClient):
 
 
 async def test_get_users_by_chat_id_ok1(ac: AsyncClient):
-    response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": WEB1_USER.id, "chat_id": BOT1_CHAT.id})
+    response = await ac.post("/message_service/connect_user_to_chat", json={"user_id": WEB1_USER.id, "chat_id": BOT1_CHAT.id})
 
-    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": WEB1_USER.id, "chat_id": BOT1_CHAT.id})
+    users = await ac.post("/message_service/get_users_by_chat_id", json=BOT1_CHAT.id)
 
     js = users.json()
 
@@ -161,7 +156,7 @@ async def test_get_users_by_chat_id_ok2(ac: AsyncClient):
     BOT2_USER.id = int(js["user_id"])
     BOT2_CHAT.id = int(js["chat_id"])
 
-    users = await ac.post("/message_service/get_users_by_chat_id", json={"user_id": "-1", "chat_id": BOT2_CHAT.id})
+    users = await ac.post("/message_service/get_users_by_chat_id", json=BOT2_CHAT.id)
     assert users.status_code == 200
 
 
@@ -175,19 +170,13 @@ async def test_get_users_by_chat_id_user_not_found(ac: AsyncClient):
     assert users.status_code == 422
 
 
-async def test_connect_to_a_waiting_chat_ok(ac: AsyncClient):
-    response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": WEB1_USER.id, "chat_id": BOT2_CHAT.id})
-    js = response.json()
-    assert js == BOT2_CHAT.model_dump()
-
-
 async def test_connect_to_a_waiting_chat_already_in_chat(ac: AsyncClient):
     response = await ac.post("/message_service/user_registration/bot", json={"platform_name": TELEGRAM_NAME, "name": BOT3_USER.model_dump()["name"]})
     js = response.json()
     BOT3_USER.id = int(js["user_id"])
     BOT3_CHAT.id = int(js["chat_id"])
 
-    response = await ac.post("/message_service/connect_to_a_waiting_chat", json={"user_id": BOT3_USER.id, "chat_id": BOT3_CHAT.id})
+    response = await ac.post("/message_service/connect_user_to_chat", json={"user_id": BOT3_USER.id, "chat_id": BOT3_CHAT.id})
     assert response.status_code == 422
 
 
@@ -213,7 +202,7 @@ async def test_send_a_message_to_chat_ok(ac: AsyncClient):
     dict_msg["sended_at"] = MESSAGE1.sended_at.isoformat()
 
     response = await ac.post("/message_service/send_a_message_to_chat", json=dict_msg)
-    assert response.json() == {"status": "ok"}
+    assert response.json() =={'message_id': 1}
 
 
 async def test_send_a_message_to_chat_not_fund_user_in_chat(ac: AsyncClient):
@@ -242,29 +231,6 @@ async def test_get_messages_from_chat_count(ac: AsyncClient):
 
 
 async def test_get_messages_from_chat_user(ac: AsyncClient):
-    response2 = await ac.post("/message_service/get_messages_from_chat", json={"user_id": BOT2_USER.id, "chat_id": MESSAGE1.chat_id, "count": 10, "offset_message_id": -1})
+    response2 = await ac.post("/message_service/get_messages_from_chat", json={"chat_id": MESSAGE1.chat_id, "count": 10, "offset_message_id": -1})
     
-    assert response2.status_code == 422
-
-
-async def test_get_messages_from_wating_chat_ok(ac: AsyncClient):
-    MESSAGE3.sender_id=BOT3_USER.id
-    MESSAGE3.chat_id=BOT3_CHAT.id
-
-    dict_msg = MESSAGE3.model_dump()
-    dict_msg["sended_at"] = MESSAGE3.sended_at.isoformat()
-
-    response = await ac.post("/message_service/send_a_message_to_chat", json=dict_msg)
-    mesg = response.json()
-
-    response2 = await ac.post("/message_service/get_messages_from_wating_chat", json={"chat_id": BOT3_CHAT.id, "count": 10, "offset_message_id": -1})
-    js = response2.json()
-    js[0]["sended_at"] = MESSAGE3.sended_at
-
-    assert comparison(MessageDTO.model_validate(js[0],from_attributes=True),MESSAGE3, ["id"]) == True
-
-
-async def test_get_messages_from_wating_chat_not_wating_chat(ac: AsyncClient):
-    response3 = await ac.post("/message_service/get_messages_from_wating_chat", json={"chat_id": BOT1_CHAT.id, "count": 10, "offset_message_id": -1})
-
-    assert response3.status_code == 422
+    assert response2.status_code == 200
