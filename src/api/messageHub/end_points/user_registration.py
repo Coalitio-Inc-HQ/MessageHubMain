@@ -54,7 +54,7 @@ async def send_notifications_added_chat(platforms: list[PlatformDTO], chat: Chat
     """
     for platform in platforms:
         if not platform.platform_type == "bot":
-            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_ADDED_WAITING_CHAT,json=chat.model_dump())
+            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_ADDED_CHAT,json=chat.model_dump())
 
 
 @router.post("/user_registration/web")
