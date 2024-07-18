@@ -42,7 +42,7 @@ async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDT
     dict_message = message.model_dump()
     dict_message["sended_at"] = message.sended_at.isoformat()
     for platform in platforms:
-         await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE_BROADCAST,json=dict_message)
+         await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE,json=dict_message)
 
 
 @router.post("/get_messages_from_chat")
