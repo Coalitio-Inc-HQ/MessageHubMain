@@ -7,6 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from src.loging.logging_utility import log, LogMessage,log_en
 from src.api.messageHub.utils import send_http_request
 
+from src.database.schemes_temp import *
+
 import logging
 
 router = APIRouter()
@@ -41,14 +43,17 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
     chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
 
     # Оповещяем о добавлении чата
-    background_tasks.add_task(
-        send_notifications_added_chat, platforms=platforms, chat=chat)
+
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    chat_=ChatDTO_TEMP.model_validate(chat,from_attributes=True)
+
+    background_tasks.add_task(send_notifications_added_chat, platforms=platforms, chat=chat_)
 
     log(LogMessage(time=None,heder="Зарегистрирован пользователь из бота.", heder_dict=user,body={"user":user,"chat":chat},level=log_en.DEBUG))
     return {"user_id": res.user_id, "chat_id": res.chat_id}
 
 
-async def send_notifications_added_chat(platforms: list[PlatformDTO], chat: ChatDTO):
+async def send_notifications_added_chat(platforms: list[PlatformDTO], chat: ChatDTO_TEMP):
     """
     Оповещение платформ о добавлении ожидающего чата
     """

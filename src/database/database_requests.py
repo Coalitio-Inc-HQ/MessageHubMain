@@ -11,9 +11,10 @@ async def platform_registration(session: AsyncSession, platform_type: str, platf
     Регистрирует новую платформу.
     Возаращяет: PlatformDTO(id,platform_type,platform_name,url).
     """
-    res = (await session.execute(insert(PlatformORM).returning(PlatformORM.id).values(platform_type=platform_type, platform_name=platform_name, url=url))).scalar()
+    res_orm = (await session.execute(insert(PlatformORM).returning(PlatformORM).values(platform_type=platform_type, platform_name=platform_name, url=url))).scalar()
+    res = PlatformDTO.model_validate(res_orm,from_attributes=True)
     await session.commit()
-    return PlatformDTO(id=res, platform_type=platform_type, platform_name=platform_name, url=url)
+    return res
 
 
 async def get_platforms_by_name(session: AsyncSession, platform_name: str) -> list[PlatformDTO]:
@@ -23,8 +24,7 @@ async def get_platforms_by_name(session: AsyncSession, platform_name: str) -> li
     """
     res = await session.execute(select(PlatformORM).where(PlatformORM.platform_name == platform_name))
     res_orm = res.scalars()
-    res_dto = [PlatformDTO.model_validate(
-        row, from_attributes=True) for row in res_orm]
+    res_dto = [PlatformDTO.model_validate(row, from_attributes=True) for row in res_orm]
     return res_dto
 
 
@@ -35,8 +35,7 @@ async def update_platforms_by_name(session: AsyncSession, platform_name: str, ur
     """
     res = await session.execute(update(PlatformORM).where(PlatformORM.platform_name == platform_name).values(url=url).returning(PlatformORM))
     res_orm = res.scalars()
-    res_dto = [PlatformDTO.model_validate(
-        row, from_attributes=True) for row in res_orm]
+    res_dto = [PlatformDTO.model_validate(row, from_attributes=True) for row in res_orm]
     await session.commit()
     return res_dto
 
@@ -64,7 +63,9 @@ async def save_messege(session: AsyncSession, message: MessageDTO) -> MessageDTO
                                                                                    sender_id=message.sender_id,
                                                                                    sended_at=message.sended_at.replace(
                                                                                        tzinfo=None),
-                                                                                   text=message.text))
+                                                                                   text=message.text,
+                                                                                   attachments=message.attachments
+                                                                                   ))
     await session.commit()
     message.id = res.scalar()
     return message
@@ -104,19 +105,20 @@ async def get_list_of_chats_in_which_user_is_not_member(session: AsyncSession, u
     subq = select(ChatUsersORM.chat_id).where(ChatUsersORM.user_id==user_id)
     res = await session.execute(select(ChatORM).where(ChatORM.id.not_in(subq)))
     res_orm = res.scalars()
-    res_dto = [ChatDTO.model_validate(
-        row, from_attributes=True) for row in res_orm]
+    res_dto = [ChatDTO.model_validate(row, from_attributes=True) for row in res_orm]
     return res_dto
 
 
 async def connect_user_to_chat(session: AsyncSession, user_id: int, chat_id: int) -> ChatUsersDTO:
     """
     Добавлет ползователя к указаному чату.
-    Возвращяет: ChatUsersDTO(user.id,chat.id).
+    Возвращяет: ChatUsersDTO(user.id,chat.id,last_read_message_id).
     """
-    session.add(ChatUsersORM(user_id=user_id, chat_id=chat_id))
+    res_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=user_id,chat_id=chat_id,last_read_message_id=-1))).scalar()
+    res = ChatUsersDTO.model_validate(res_orm,from_attributes=True)
+    await session.execute(update(ChatORM).where(ChatORM.id==chat_id).values(is_waiting_answer=False))
     await session.commit()
-    return ChatUsersDTO(user_id=user_id, chat_id=chat_id)
+    return res
 
 
 async def get_chats_by_user_id(session: AsyncSession, user_id: int) -> list[ChatDTO]:
@@ -126,8 +128,7 @@ async def get_chats_by_user_id(session: AsyncSession, user_id: int) -> list[Chat
     """
     res = await session.execute(select(ChatORM).join(ChatUsersORM).where(ChatUsersORM.user_id == user_id))
     res_orm = res.scalars()
-    res_dto = [ChatDTO.model_validate(
-        row, from_attributes=True) for row in res_orm]
+    res_dto = [ChatDTO.model_validate(row, from_attributes=True) for row in res_orm]
     return res_dto
 
 
@@ -141,12 +142,10 @@ async def get_messges_from_chat(session: AsyncSession, chat_id: int, count: int,
     if offset_message_id < 0:
         res = await session.execute(select(MessageORM).where(MessageORM.chat_id == chat_id).order_by(MessageORM.sended_at.desc(), MessageORM.id.desc()).limit(count))
     else:
-        subq = select(MessageORM.sended_at).where(
-            MessageORM.id == offset_message_id).scalar_subquery()
+        subq = select(MessageORM.sended_at).where(MessageORM.id == offset_message_id).scalar_subquery()
         res = await session.execute(select(MessageORM).where(MessageORM.chat_id == chat_id, MessageORM.sended_at <= subq).order_by(MessageORM.sended_at.desc(), MessageORM.id.desc()).limit(count))
     res_orm = res.scalars().all()
-    res_dto = [MessageDTO.model_validate(
-        row, from_attributes=True) for row in res_orm[::-1]]
+    res_dto = [MessageDTO.model_validate(row, from_attributes=True) for row in res_orm[::-1]]
     return res_dto
 
 
@@ -172,8 +171,7 @@ async def get_users_by_chat_id(session: AsyncSession, chat_id: int) -> list[User
     """
     Получает всех пользователей чата
     """
-    subq1 = select(ChatUsersORM.user_id).where(
-        ChatUsersORM.chat_id == chat_id)
+    subq1 = select(ChatUsersORM.user_id).where(ChatUsersORM.chat_id == chat_id)
     subq2 = select(UserORM).where(UserORM.id.in_(subq1))
     res = await session.execute(subq2)
     res_orm = res.scalars()
@@ -193,17 +191,6 @@ async def whether_the_user_is_in_the_chat(session: AsyncSession, user_id: int, c
         return False
 
 
-async def is_waiting_chat(session: AsyncSession, chat_id: int) -> bool:
-    """
-    Проверяем является ли чат ожидающим
-    """
-    res = await (session.execute(select(func.count()).where(WaitingСhatORM.chat_id == chat_id)))
-    if (res.scalar() == 1):
-        return True
-    else:
-        return False
-
-
 async def get_user_by_user_id(session: AsyncSession, user_id: int) -> UserDTO:
     """
     Получаем пользователя по id
@@ -214,18 +201,6 @@ async def get_user_by_user_id(session: AsyncSession, user_id: int) -> UserDTO:
 """
 temp
 """
-
-
-async def connect_to_a_waiting_chat(session: AsyncSession, user_id: int, chat_id: int) -> ChatDTO:
-    """
-    Подключат пользователя к ожидающему чату.
-    """
-    await session.execute(insert(ChatUsersORM).values(user_id=user_id, chat_id=chat_id))
-    await session.execute(delete(WaitingСhatORM).where(WaitingСhatORM.chat_id == chat_id))
-    res = (await session.execute(select(ChatORM).where(ChatORM.id == chat_id))).scalar()
-    res = ChatDTO.model_validate(res, from_attributes=True)
-    await session.commit()
-    return res
 
 
 async def user_registration(session: AsyncSession, platform_name: str, name: str) -> UserDTO:
@@ -246,8 +221,8 @@ async def bot_user_registration(session: AsyncSession, platform_name: str, name:
     """
     platform_id = (await session.execute(select(PlatformORM.id).where(PlatformORM.platform_name == platform_name))).scalar()
     bot_id = (await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name))).scalar()
-    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name))).scalar()
-    await session.execute(insert(WaitingСhatORM).values(chat_id=chat_id))
-    await session.execute(insert(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id))
+    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True))).scalar()
+    chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id, last_read_message_id=-1))).scalar()
+    chat_users = ChatUsersDTO.model_validate(chat_users_orm,from_attributes=True)
     await session.commit()
-    return ChatUsersDTO(user_id=bot_id, chat_id=chat_id)
+    return chat_users

@@ -6,6 +6,8 @@ from tests.test_utility import comparison
 
 import datetime
 
+from src.database.schemes_temp import ChatDTO_TEMP, ChatUsersDTO_TEMP, MessageDTO_TEMP
+
 STR_31 = "1234567890123456789012345678901"
 STR_256 = "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 
@@ -18,30 +20,30 @@ TELEGRAM = PlatformDTO(id=-1, platform_type="bot",platform_name=TELEGRAM_NAME,ur
 WEB = PlatformDTO(id=-1, platform_type="web",platform_name=WEB_NAME,url=WEB_URL)
 
 BOT1_USER = UserDTO(id=-1, platform_id=-1, name="Вова")
-BOT1_CHAT = ChatDTO(id=-1, name="Вова")
+BOT1_CHAT = ChatDTO_TEMP(id=-1, name="Вова")
 
 BOT2_USER = UserDTO(id=-1, platform_id=-1, name="AAA")
-BOT2_CHAT = ChatDTO(id=-1, name="AAA")
+BOT2_CHAT = ChatDTO_TEMP(id=-1, name="AAA")
 
 BOT3_USER = UserDTO(id=-1, platform_id=-1, name="BBB")
-BOT3_CHAT = ChatDTO(id=-1, name="BBB")
+BOT3_CHAT = ChatDTO_TEMP(id=-1, name="BBB")
 
 WEB1_USER = UserDTO(id=-1, platform_id=-1, name="Ваня")
 
 WEB2_USER = UserDTO(id=-1, platform_id=-1, name="Вася")
 
-MESSAGE1 = MessageDTO(id=-1, chat_id=-1,sender_id=-1,sended_at= datetime.datetime.now(), text="asdas")
 
-MESSAGE2 = MessageDTO(id=-1, chat_id=-1,sender_id=-1,sended_at=datetime.datetime.now(), text="asdas1")
+MESSAGE1 = MessageDTO_TEMP(id=-1, chat_id=-1,sender_id=-1,sended_at= datetime.datetime.now(), text="asdas")
 
-MESSAGE3 = MessageDTO(id=-1, chat_id=-1,sender_id=-1,sended_at=datetime.datetime.now(), text="asdas2")
+MESSAGE2 = MessageDTO_TEMP(id=-1, chat_id=-1,sender_id=-1,sended_at=datetime.datetime.now(), text="asdas1")
+
+MESSAGE3 = MessageDTO_TEMP(id=-1, chat_id=-1,sender_id=-1,sended_at=datetime.datetime.now(), text="asdas2")
 
 async def test_prep():
     async with async_session_maker() as session:
         await session.execute(delete(MessageORM))
         await session.execute(delete(ChatUsersORM))
         await session.execute(delete(ChatORM))
-        await session.execute(delete(WaitingСhatORM))
         await session.execute(delete(UserORM))
         await session.execute(delete(PlatformORM))
         await session.commit()
@@ -221,7 +223,7 @@ async def test_get_messages_from_chat_ok(ac: AsyncClient):
     js = response2.json()
     js[0]["sended_at"] = MESSAGE1.sended_at
 
-    assert comparison(MessageDTO.model_validate(js[0],from_attributes=True),MESSAGE1, ["id"]) == True
+    assert comparison(MessageDTO_TEMP.model_validate(js[0],from_attributes=True),MESSAGE1, ["id"]) == True
 
 
 async def test_get_messages_from_chat_count(ac: AsyncClient):

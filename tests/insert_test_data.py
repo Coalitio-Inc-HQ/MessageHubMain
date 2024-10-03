@@ -1,41 +1,39 @@
 from src.database.database_requests import *
 from sqlalchemy.ext.asyncio import AsyncSession
 import datetime
+import random
 
 TELEGRAM_NAME = "Telegram"
 WEB_NAME = "web"
 
+COUNT_BOT_USERS = 10
+COUNT_WEB_USERS = 0
+
+CONUT_CONNECTED_BOT_USERS = 0
+MAX_COUNT_CONNECTRD_WEB_USERS = 0
+
+MAX_MESSAGES = 50
 
 async def ins(session: AsyncSession):
     telegram = await platform_registration(session=session, platform_type="bot", platform_name=TELEGRAM_NAME, url="http://localhost:8002")
-    web = await platform_registration(session=session, platform_type="web", platform_name=WEB_NAME, url="http://localhost:8003")
+    web = await platform_registration(session=session, platform_type="web", platform_name=WEB_NAME, url="http://localhost:8000")
 
-    bot1 = await bot_user_registration(session=session, platform_name=TELEGRAM_NAME, name="Володя")
-    bot2 = await bot_user_registration(session=session, platform_name=TELEGRAM_NAME, name="Игорь")
-    bot3 = await bot_user_registration(session=session, platform_name=TELEGRAM_NAME, name="Саша")
+    for i in range(COUNT_BOT_USERS):
+        await bot_user_registration(session=session, platform_name=TELEGRAM_NAME, name=f"Bot user {i}")
 
-    user1 = await user_registration(session=session, platform_name=WEB_NAME, name="Руслан")
-    user2 = await user_registration(session=session, platform_name=WEB_NAME, name="Борис")
-    user3 = await user_registration(session=session, platform_name=WEB_NAME, name="Паша")
-    user4 = await user_registration(session=session, platform_name=WEB_NAME, name="Коля")
+    for i in range(COUNT_WEB_USERS):
+        await user_registration(session=session, platform_name=WEB_NAME, name=f"Web user {i}")
 
-    await connect_to_a_waiting_chat(session=session, user_id=user1.id, chat_id=bot1.chat_id)
+    for i in range (CONUT_CONNECTED_BOT_USERS):
+        arr = []
+        for j in range(MAX_COUNT_CONNECTRD_WEB_USERS):
+            id = random.randint(COUNT_BOT_USERS,COUNT_BOT_USERS+COUNT_WEB_USERS)
+            while (id in arr):
+                id = random.randint(COUNT_BOT_USERS,COUNT_BOT_USERS+COUNT_WEB_USERS)
+            arr.append(id)
 
-    await connect_to_a_waiting_chat(session=session, user_id=user2.id, chat_id=bot2.chat_id)
-    await connect_user_to_chat(session=session, user_id=user3.id, chat_id=bot2.chat_id)
+            await connect_user_to_chat(session=session, user_id=id, chat_id=i+1)
 
-    msg1 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot1.chat_id, sender_id=bot1.user_id, sended_at=datetime.datetime.now(), text="Hello!"))
-    msg2 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot1.chat_id, sender_id=bot1.user_id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 3), text="How to pass the internship?"))
-    msg3 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot1.chat_id, sender_id=user1.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 5), text="No comments."))
-    msg4 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot1.chat_id, sender_id=bot1.user_id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 5), text=":("))
-
-    msg5 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=bot2.user_id, sended_at=datetime.datetime.now(), text="Как дела?"))
-    msg6 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user1.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 3), text="Привет, спасибо. А у тебя?"))
-    msg7 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=bot2.user_id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 5), text="Отлично, спасибо. С тобой случайно не встречался последнее время?"))
-    msg8 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user1.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 6), text=" Да, был занят работой. Новый проект идёт полным ходом."))
-    msg9 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=bot2.user_id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 7), text="Звучит интересно. Расскажи, о чём он?"))
-    msg10 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user1.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 8), text=" Это разработка нового приложения для агрегации чатов."))
-    msg11 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user2.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 9), text="Интересная идея."))
-    msg12 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=bot1.user_id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 10), text="Может быть."))
-    msg13 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user1.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 11), text="Да, точно. Именно поэтому я стараюсь делать этот проект максимально удобным и интуитивно понятным."))
-    msg14 = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot2.chat_id, sender_id=user2.id, sended_at=datetime.datetime.now()+datetime.timedelta(0, 12), text="Замечательно. Надеюсь, удастся."))
+    for i in range (CONUT_CONNECTED_BOT_USERS):
+        for j in range(MAX_MESSAGES):
+            await save_messege(session=session, message=MessageDTO(id=None, chat_id=i+1, sender_id=i+1, sended_at=datetime.datetime.now(), text=f"{j}: Hello!", attachments={}))

@@ -22,11 +22,13 @@ class WaitingСhatDTO(BaseModel):
 class ChatDTO(BaseModel):
     id: int
     name: str = Field(max_length=256)
+    is_waiting_answer: bool
 
 
 class ChatUsersDTO(BaseModel):
     user_id: int
     chat_id: int
+    last_read_message_id: int
 
 
 class MessageDTO(BaseModel):
@@ -35,3 +37,5 @@ class MessageDTO(BaseModel):
     sender_id: int
     sended_at: datetime
     text: str | None
+    attachments: dict
+

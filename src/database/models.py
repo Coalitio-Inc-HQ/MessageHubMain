@@ -23,30 +23,25 @@ class UserORM(Base):
     name: Mapped[str] = mapped_column(String(256))
 
 
-class WaitingСhatORM(Base):
-    __tablename__ = "unconnected_chat_with_bot"
-    chat_id: Mapped[int] = mapped_column(
-        ForeignKey("chat.id"), primary_key=True)
-
-
 class ChatORM(Base):
     __tablename__ = "chat"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256))
+    is_waiting_answer: Mapped[bool]
 
 
 class ChatUsersORM(Base):
     __tablename__ = "chat_users"
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id"), primary_key=True)
-    chat_id: Mapped[int] = mapped_column(
-        ForeignKey("chat.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True, index=True)
+    chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"), primary_key=True, index=True)
+    last_read_message_id: Mapped[int]
 
 
 class MessageORM(Base):
     __tablename__ = "message"
     id: Mapped[int] = mapped_column(primary_key=True)
-    chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"))
+    chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"), index=True)
     sender_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     sended_at: Mapped[datetime]
     text: Mapped[str | None]
+    attachments: Mapped[dict] = mapped_column(JSON)

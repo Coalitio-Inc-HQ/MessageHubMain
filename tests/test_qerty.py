@@ -23,7 +23,7 @@ async def test_bot_user_registration():
 async def test_save_messege():
     async with async_session_maker() as session:
         bot = await bot_user_registration(session=session, platform_name="telga", name="zxcv")
-        res = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot.chat_id, sender_id=bot.user_id, sended_at=datetime.datetime.now(), text="Hello world!"))
+        res = await save_messege(session=session, message=MessageDTO(id=None, chat_id=bot.chat_id, sender_id=bot.user_id, sended_at=datetime.datetime.now(), text="Hello world!",attachments={}))
         assert res == res
 
 
@@ -77,16 +77,6 @@ async def test_get_list_of_chats_in_which_user_is_not_member():
         user = await bot_user_registration(session=session, platform_name="telga", name="asxd")
         res = await get_list_of_chats_in_which_user_is_not_member(session=session, user_id=user.user_id)
         assert 1 == 1
-
-
-async def test_connect_to_a_waiting_chat():
-    async with async_session_maker() as session:
-        bot = await bot_user_registration(session=session, platform_name="telga", name="asxd")
-        user = await user_registration(session=session, platform_name="telga", name="zxc")
-
-        res = await connect_to_a_waiting_chat(session=session, user_id=user.id, chat_id=bot.chat_id)
-
-        assert bot.chat_id == res.id
 
 
 async def test_connect_user_to_chat():
@@ -158,27 +148,6 @@ async def test_whether_the_user_is_in_the_chat():
         res = await whether_the_user_is_in_the_chat(session=session, chat_id=bot.chat_id, user_id=bot.user_id)
 
         assert res == True
-
-
-async def test_is_waiting_chat_1():
-    async with async_session_maker() as session:
-        plat = await platform_registration(session=session, platform_name="ASD", platform_type="web", url="asdasdasd")
-        bot = await bot_user_registration(session=session, platform_name="ASD", name="asxфывdxzcsad")
-        res = await is_waiting_chat(session=session, chat_id=bot.chat_id)
-
-        assert res == True
-
-
-async def test_is_waiting_chat_2():
-    async with async_session_maker() as session:
-        bot = await bot_user_registration(session=session, platform_name="telga", name="asxd")
-        user = await user_registration(session=session, platform_name="telga", name="zxc")
-
-        res = await connect_to_a_waiting_chat(session=session, user_id=user.id, chat_id=bot.chat_id)
-
-        res = await is_waiting_chat(session=session, chat_id=bot.chat_id)
-
-        assert res == False
 
 
 async def test_get_user_by_user_id():

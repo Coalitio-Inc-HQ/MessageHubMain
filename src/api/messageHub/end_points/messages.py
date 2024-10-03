@@ -11,31 +11,33 @@ from pydantic import BaseModel
 from src.loging.logging_utility import log, LogMessage,log_en
 from src.api.messageHub.utils import send_http_request
 
+from src.database.schemes_temp import *
 
 router = APIRouter()
 
 
 @router.post("/send_a_message_to_chat")
-async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: MessageDTO, session: AsyncSession = Depends(get_session)):
+async def send_a_message_to_chat(background_tasks: BackgroundTasks, message_: MessageDTO_TEMP, session: AsyncSession = Depends(get_session)):
     """
     Отправляет сообщение в чат.
     """
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    message = MessageDTO(id=message_.id,chat_id=message_.chat_id,sender_id=message_.sender_id,sended_at=message_.sended_at,text=message_.text, attachments={})
+
     # Проверяем принадлежит ли пользователь отправивший сооющение к данному чату
     if (not await whether_the_user_is_in_the_chat(session=session, chat_id=message.chat_id, user_id=message.sender_id)):
-        raise HTTPException(
-            status_code=422, detail="Пользователь не находится в данном чате")
+        raise HTTPException(status_code=422, detail="Пользователь не находится в данном чате")
 
     res = await save_messege(session=session, message=message)
 
     platforms = await get_all_platform(session=session)
-    background_tasks.add_task(
-        send_messge_broadcast, platforms=platforms, message=message)
+    background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message_)
     
     log(LogMessage(time=None,heder="Сообщение отправлено в чат.", heder_dict={"message":message},body=res,level=log_en.DEBUG))
     return {"message_id": res.id}
 
 
-async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO):
+async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO_TEMP):
     """
     Отправка сообщения всем платформам
     """
@@ -55,4 +57,9 @@ async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), off
 
     res = await get_messges_from_chat(session=session, chat_id=chat_id, count=count, offset_message_id=offset_message_id)
     log(LogMessage(time=None,heder="Получены сообщения из чата.", heder_dict={"chat_id":chat_id, "count":count, "offset_message_id":offset_message_id},body=res,level=log_en.DEBUG))
-    return res
+
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    res_ = []
+    for chat in res:
+        res_.append(MessageDTO_TEMP.model_validate(chat,from_attributes=True))
+    return res_

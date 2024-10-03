@@ -9,6 +9,8 @@ from ....settings import settings
 from src.api.messageHub.utils import send_http_request
 from src.loging.logging_utility import log, LogMessage,log_en
 
+from src.database.schemes_temp import *
+
 router = APIRouter()
 
 @router.post("/get_chats_in_which_user_is_not_member")
@@ -18,7 +20,13 @@ async def get_waiting_chats(user_id: int = Body(), session: AsyncSession = Depen
     """
     res = await get_list_of_chats_in_which_user_is_not_member(session=session, user_id=user_id)
     log(LogMessage(time=None,heder="Получен список чатов в которых не состоит пользователь.", heder_dict={"user_id":user_id},body=res,level=log_en.DEBUG))
-    return res
+
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    res_ = []
+    for chat in res:
+        res_.append(ChatDTO_TEMP.model_validate(chat,from_attributes=True))
+    # Добавить id последнего прочитаного сообщения
+    return res_
 
 
 @router.post("/get_chats_by_user")
@@ -29,7 +37,13 @@ async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depe
     # Надо ли проверять существование пользователя?
     res = await get_chats_by_user_id(session=session, user_id=user_id)
     log(LogMessage(time=None,heder="Получен список чатов пользователя.", heder_dict={"user_id":user_id},body=res,level=log_en.DEBUG))
-    return res
+
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    res_ = []
+    for chat in res:
+        res_.append(ChatDTO_TEMP.model_validate(chat,from_attributes=True))
+    # Добавить id последнего прочитаного сообщения
+    return res_
 
 
 @router.post("/get_users_by_chat_id")
@@ -50,13 +64,17 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
     try:
         res = await connect_user_to_chat(session=session, user_id=user_id, chat_id=chat_id)
     except IntegrityError as err:
-        raise HTTPException(
-            status_code=422, detail="Ползователь уже находится в чате")
+        raise HTTPException(status_code=422, detail="Ползователь уже находится в чате")
 
     # получаем нужную информацию для оповещения
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
+
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    chat_=ChatDTO_TEMP.model_validate(chat,from_attributes=True)
+
     user = await get_user_by_user_id(session=session, user_id=user_id)
 
+    # Выбрать все платформы
     platforms = await get_platforms_by_chat_id(session=session, chat_id=chat_id)
 
     # проверяем присудствует ли платформа добовляемого пользователя в списке
@@ -70,13 +88,17 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
         platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь
-    background_tasks.add_task(send_notifications_user_added_to_chat,platforms=platforms, user=user, chat=chat)
+    background_tasks.add_task(send_notifications_user_added_to_chat,platforms=platforms, user=user, chat=chat_)
 
     log(LogMessage(time=None,heder="Пользователь добавлен в чат.", heder_dict={"chat_id":chat_id, "user_id":user_id},body={"chat":chat,"user":user},level=log_en.DEBUG))
-    return res
+    
+    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    res_ = ChatUsersDTO_TEMP.model_validate(res,from_attributes=True)
+
+    return res_
 
 
-async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO):
+async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO_TEMP):
     """
     Отправка сообщений всем платформам о том, что пользователь добавлен в чат
     """
