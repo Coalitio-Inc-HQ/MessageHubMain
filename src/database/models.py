@@ -28,13 +28,14 @@ class ChatORM(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256))
     is_waiting_answer: Mapped[bool]
+    is_archive: Mapped[bool]
 
 
 class ChatUsersORM(Base):
     __tablename__ = "chat_users"
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True, index=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"), primary_key=True, index=True)
-    last_read_message_id: Mapped[int]
+    last_read_message_id: Mapped[int | None]
 
 
 class MessageORM(Base):

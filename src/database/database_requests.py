@@ -116,7 +116,6 @@ async def connect_user_to_chat(session: AsyncSession, user_id: int, chat_id: int
     """
     res_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=user_id,chat_id=chat_id,last_read_message_id=-1))).scalar()
     res = ChatUsersDTO.model_validate(res_orm,from_attributes=True)
-    await session.execute(update(ChatORM).where(ChatORM.id==chat_id).values(is_waiting_answer=False))
     await session.commit()
     return res
 
@@ -221,8 +220,8 @@ async def bot_user_registration(session: AsyncSession, platform_name: str, name:
     """
     platform_id = (await session.execute(select(PlatformORM.id).where(PlatformORM.platform_name == platform_name))).scalar()
     bot_id = (await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name))).scalar()
-    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True))).scalar()
-    chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id, last_read_message_id=-1))).scalar()
+    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True, is_archive=False))).scalar()
+    chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id,last_read_message_id=-1))).scalar()
     chat_users = ChatUsersDTO.model_validate(chat_users_orm,from_attributes=True)
     await session.commit()
     return chat_users

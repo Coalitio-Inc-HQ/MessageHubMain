@@ -15,20 +15,22 @@ class UserDTO(BaseModel):
     name: str = Field(max_length=256)
 
 
-class WaitingСhatDTO(BaseModel):
-    chat_id: int
-
-
 class ChatDTO(BaseModel):
     id: int
     name: str = Field(max_length=256)
     is_waiting_answer: bool
+    is_archive: bool
 
 
 class ChatUsersDTO(BaseModel):
     user_id: int
     chat_id: int
-    last_read_message_id: int
+    last_read_message_id: int | None = None
+    """
+    last_read_message_id
+    -1 = не установлено
+    null зарезервироавно для опредления а состит ли пользователь в чате
+    """
 
 
 class MessageDTO(BaseModel):
@@ -39,3 +41,5 @@ class MessageDTO(BaseModel):
     text: str | None
     attachments: dict
 
+class ExtChatDTO(ChatDTO):
+    last_read_message_id: int | None = None

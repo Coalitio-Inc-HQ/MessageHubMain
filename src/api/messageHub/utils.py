@@ -1,6 +1,10 @@
 from httpx import AsyncClient, HTTPStatusError
 from typing import Any
 from src.loging.logging_utility import log, LogMessage,log_en
+from src.database.schemes import PlatformDTO
+from typing import Any
+from pydantic import BaseModel
+from src.settings import settings
 
 async def send_http_request(base_url:str, relative_url:str, json: Any|None):
     async with AsyncClient(base_url=base_url) as clinet:
@@ -26,3 +30,4 @@ async def send_http_request(base_url:str, relative_url:str, json: Any|None):
                         "json":json
                     },
                     level=log_en.ERROR))
+            

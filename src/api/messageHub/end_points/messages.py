@@ -13,16 +13,18 @@ from src.api.messageHub.utils import send_http_request
 
 from src.database.schemes_temp import *
 
+from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
+
+from src.api.messageHub.event import call_handlers_update_chat
+
 router = APIRouter()
 
 
 @router.post("/send_a_message_to_chat")
-async def send_a_message_to_chat(background_tasks: BackgroundTasks, message_: MessageDTO_TEMP, session: AsyncSession = Depends(get_session)):
+async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: MessageDTO, session: AsyncSession = Depends(get_session)):
     """
     Отправляет сообщение в чат.
     """
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    message = MessageDTO(id=message_.id,chat_id=message_.chat_id,sender_id=message_.sender_id,sended_at=message_.sended_at,text=message_.text, attachments={})
 
     # Проверяем принадлежит ли пользователь отправивший сооющение к данному чату
     if (not await whether_the_user_is_in_the_chat(session=session, chat_id=message.chat_id, user_id=message.sender_id)):
@@ -31,8 +33,33 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message_: Me
     res = await save_messege(session=session, message=message)
 
     platforms = await get_all_platform(session=session)
-    background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message_)
+
+    chat = await select_data_one_or_none(session, ChatORM, ChatDTO, ChatORM.id==message.chat_id)
+
+    change_chat = False
+    # Если чат был в архиве то необходимо вывести из архива
+    if chat.is_archive:
+        change_chat = True
+        chat.is_archive = False
+
+    # Если сообщение пришло от сотрудника чат больше не ожидающий
+    sub_quer = select(UserORM.platform_id).where(UserORM.id==message.sender_id).scalar_subquery()
+    quer = select(PlatformORM).where(PlatformORM.id == sub_quer)
+    user_platform = await select_data_one_or_none_quer(session, PlatformDTO, quer)
+    if user_platform.platform_type != "bot":
+        change_chat = True
+        chat.is_waiting_answer = False
     
+    # Отправка события
+    if change_chat:
+        await update_data(session, ChatORM, ChatORM.id==chat.id, **(chat.model_dump()))
+        background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
+
+    if chat.is_waiting_answer:
+        background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message)
+    else:
+        background_tasks.add_task(send_messge_personal, platforms=platforms, message=message)
+
     log(LogMessage(time=None,heder="Сообщение отправлено в чат.", heder_dict={"message":message},body=res,level=log_en.DEBUG))
     return {"message_id": res.id}
 
@@ -47,6 +74,16 @@ async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDT
          await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE,json=dict_message)
 
 
+async def send_messge_personal(platforms: list[PlatformDTO], message: MessageDTO_TEMP):
+    """
+    Отправка сообщения всем платформам
+    """
+    dict_message = message.model_dump()
+    dict_message["sended_at"] = message.sended_at.isoformat()
+    for platform in platforms:
+         await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_PERSONAL_MESSAGE,json=dict_message)
+
+
 @router.post("/get_messages_from_chat")
 async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
@@ -58,8 +95,4 @@ async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), off
     res = await get_messges_from_chat(session=session, chat_id=chat_id, count=count, offset_message_id=offset_message_id)
     log(LogMessage(time=None,heder="Получены сообщения из чата.", heder_dict={"chat_id":chat_id, "count":count, "offset_message_id":offset_message_id},body=res,level=log_en.DEBUG))
 
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res_ = []
-    for chat in res:
-        res_.append(MessageDTO_TEMP.model_validate(chat,from_attributes=True))
-    return res_
+    return res

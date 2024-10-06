@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer
 
 class PlatformIn(BaseModel):
     """
@@ -19,19 +20,22 @@ class PlatformIn(BaseModel):
 @router.post("/platform_registration/{platform_type}")
 async def registr_platform(platform_type: str, platform: PlatformIn, session: AsyncSession = Depends(get_session)):
     """
-    Регистрирует платформу бота.
+    Регистрирует платформу.
     """
 
     if len(platform_type) > 3:
         raise HTTPException(status_code=422, detail="len(platform_type)>3")
-    platforms = await get_platforms_by_name(session=session, platform_name=platform.platform_name)
-    
+
+    db_platform = await select_data_one_or_none(session, PlatformORM, PlatformDTO, PlatformORM.platform_name==platform.platform_name)
+
     # перезваписываем url если платформа уже существует
-    if not len(platforms) == 0:
-        await update_platforms_by_name(session=session, platform_name=platform.platform_name, url=platform.url)
-        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform":platforms[0]},level=log_en.INFO))
+    platform_data = platform.model_dump()
+    platform_data.update({"platform_type":platform_type})
+    if db_platform:
+        await update_data(session, PlatformORM, PlatformORM.platform_name==platform.platform_name, **platform_data)
+        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform":db_platform},level=log_en.INFO))
         return {"status": "ok"}
     else:
-        plat = await platform_registration(session=session, platform_type=platform_type, platform_name=platform.platform_name, url=platform.url)
-        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform":plat},level=log_en.INFO))
+        platform_id = await insert_data(session, PlatformORM, platform_data,return_atr=["id"])
+        log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform_id":platform_id},level=log_en.INFO))
         return {"status": "ok"}

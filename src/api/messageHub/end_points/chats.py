@@ -11,39 +11,25 @@ from src.loging.logging_utility import log, LogMessage,log_en
 
 from src.database.schemes_temp import *
 
+from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
+
+from sqlalchemy import or_
+
 router = APIRouter()
 
-@router.post("/get_chats_in_which_user_is_not_member")
-async def get_waiting_chats(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
-    """
-    Отдаёт список всех чатов в которых не состоит пользователь.
-    """
-    res = await get_list_of_chats_in_which_user_is_not_member(session=session, user_id=user_id)
-    log(LogMessage(time=None,heder="Получен список чатов в которых не состоит пользователь.", heder_dict={"user_id":user_id},body=res,level=log_en.DEBUG))
-
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res_ = []
-    for chat in res:
-        res_.append(ChatDTO_TEMP.model_validate(chat,from_attributes=True))
-    # Добавить id последнего прочитаного сообщения
-    return res_
-
-
-@router.post("/get_chats_by_user")
-async def get_chats_by_user_(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
+@router.post("/get_chats")
+async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
     """
     Возвращает чаты пользователя.
     """
-    # Надо ли проверять существование пользователя?
-    res = await get_chats_by_user_id(session=session, user_id=user_id)
-    log(LogMessage(time=None,heder="Получен список чатов пользователя.", heder_dict={"user_id":user_id},body=res,level=log_en.DEBUG))
+    
+    chats = await select_data_arr_quer(session, ExtChatDTO, select(ChatORM,ChatUsersORM).join(ChatUsersORM).where(ChatUsersORM.user_id==user_id))
 
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res_ = []
-    for chat in res:
-        res_.append(ChatDTO_TEMP.model_validate(chat,from_attributes=True))
-    # Добавить id последнего прочитаного сообщения
-    return res_
+    subqer = select(ChatUsersORM.chat_id).where(ChatUsersORM.user_id==user_id)
+    unconn_chats = await select_data_arr_quer(session,ExtChatDTO,select(ChatORM).where(ChatORM.id.not_in(subqer), ChatORM.is_waiting_answer == True))
+    chats = chats + unconn_chats
+
+    return chats
 
 
 @router.post("/get_users_by_chat_id")
@@ -69,9 +55,6 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
     # получаем нужную информацию для оповещения
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
 
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    chat_=ChatDTO_TEMP.model_validate(chat,from_attributes=True)
-
     user = await get_user_by_user_id(session=session, user_id=user_id)
 
     # Выбрать все платформы
@@ -88,14 +71,11 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
         platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь
-    background_tasks.add_task(send_notifications_user_added_to_chat,platforms=platforms, user=user, chat=chat_)
+    background_tasks.add_task(send_notifications_user_added_to_chat,platforms=platforms, user=user, chat=chat)
 
     log(LogMessage(time=None,heder="Пользователь добавлен в чат.", heder_dict={"chat_id":chat_id, "user_id":user_id},body={"chat":chat,"user":user},level=log_en.DEBUG))
     
-    # убрать в последствии !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    res_ = ChatUsersDTO_TEMP.model_validate(res,from_attributes=True)
-
-    return res_
+    return res
 
 
 async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO_TEMP):
