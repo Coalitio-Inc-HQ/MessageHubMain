@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 57346cae55b7
+Revision ID: 80b865e76e69
 Revises: 
-Create Date: 2024-10-02 15:56:02.362453
+Create Date: 2024-11-04 16:51:30.811786
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '57346cae55b7'
+revision: str = '80b865e76e69'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,6 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=256), nullable=False),
     sa.Column('is_waiting_answer', sa.Boolean(), nullable=False),
+    sa.Column('is_archive', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('platform',
@@ -43,7 +44,8 @@ def upgrade() -> None:
     op.create_table('chat_users',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('chat_id', sa.Integer(), nullable=False),
-    sa.Column('last_read_message_id', sa.Integer(), nullable=False),
+    sa.Column('last_read_message_id', sa.Integer(), nullable=True),
+    sa.Column('user_in_chat', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['chat_id'], ['chat.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'chat_id')

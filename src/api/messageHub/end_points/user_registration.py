@@ -49,19 +49,9 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
 
     # Оповещяем о добавлении чата
     background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
-    # background_tasks.add_task(send_notifications_added_chat, platforms=platforms, chat=chat)
 
     log(LogMessage(time=None,heder="Зарегистрирован пользователь из бота.", heder_dict=user,body={"user":user,"chat":chat},level=log_en.DEBUG))
     return {"user_id": res.user_id, "chat_id": res.chat_id}
-
-
-# async def send_notifications_added_chat(platforms: list[PlatformDTO], chat: ChatDTO_TEMP):
-#     """
-#     Оповещение платформ о добавлении ожидающего чата
-#     """
-#     for platform in platforms:
-#         if not platform.platform_type == "bot":
-#             await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_ADDED_CHAT,json=chat.model_dump())
 
 
 @router.post("/user_registration/web")

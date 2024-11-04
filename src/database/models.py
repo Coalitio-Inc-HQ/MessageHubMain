@@ -36,6 +36,7 @@ class ChatUsersORM(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True, index=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"), primary_key=True, index=True)
     last_read_message_id: Mapped[int | None]
+    user_in_chat: Mapped[bool]
 
 
 class MessageORM(Base):

@@ -26,10 +26,12 @@ class ChatUsersDTO(BaseModel):
     user_id: int
     chat_id: int
     last_read_message_id: int | None = None
+    user_in_chat: bool = False
     """
     last_read_message_id
     -1 = не установлено
     null зарезервироавно для опредления а состит ли пользователь в чате
+    user_in_chat Пользователь находится в чате
     """
 
 
@@ -43,3 +45,4 @@ class MessageDTO(BaseModel):
 
 class ExtChatDTO(ChatDTO):
     last_read_message_id: int | None = None
+    user_in_chat: bool = False

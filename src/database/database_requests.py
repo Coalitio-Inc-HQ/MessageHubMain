@@ -114,7 +114,7 @@ async def connect_user_to_chat(session: AsyncSession, user_id: int, chat_id: int
     Добавлет ползователя к указаному чату.
     Возвращяет: ChatUsersDTO(user.id,chat.id,last_read_message_id).
     """
-    res_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=user_id,chat_id=chat_id,last_read_message_id=-1))).scalar()
+    res_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=user_id,chat_id=chat_id,last_read_message_id=-1, user_in_chat = True))).scalar()
     res = ChatUsersDTO.model_validate(res_orm,from_attributes=True)
     await session.commit()
     return res
@@ -183,7 +183,7 @@ async def whether_the_user_is_in_the_chat(session: AsyncSession, user_id: int, c
     """
     Проверяем принадлежит ли пользователдь чату
     """
-    res = await (session.execute(select(func.count()).where(ChatUsersORM.chat_id == chat_id, ChatUsersORM.user_id == user_id)))
+    res = await (session.execute(select(func.count()).where(ChatUsersORM.chat_id == chat_id, ChatUsersORM.user_id == user_id, ChatUsersORM.user_in_chat == True)))
     if (res.scalar() == 1):
         return True
     else:
@@ -221,7 +221,7 @@ async def bot_user_registration(session: AsyncSession, platform_name: str, name:
     platform_id = (await session.execute(select(PlatformORM.id).where(PlatformORM.platform_name == platform_name))).scalar()
     bot_id = (await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name))).scalar()
     chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True, is_archive=False))).scalar()
-    chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id,last_read_message_id=-1))).scalar()
+    chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id,last_read_message_id=-1, user_in_chat = True))).scalar()
     chat_users = ChatUsersDTO.model_validate(chat_users_orm,from_attributes=True)
     await session.commit()
     return chat_users

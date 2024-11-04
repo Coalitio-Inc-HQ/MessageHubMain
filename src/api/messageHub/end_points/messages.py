@@ -35,6 +35,7 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
     platforms = await get_all_platform(session=session)
 
     chat = await select_data_one_or_none(session, ChatORM, ChatDTO, ChatORM.id==message.chat_id)
+    old_chat_is_archive = chat.is_archive
 
     change_chat = False
     # Если чат был в архиве то необходимо вывести из архива
@@ -42,23 +43,33 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
         change_chat = True
         chat.is_archive = False
 
-    # Если сообщение пришло от сотрудника чат больше не ожидающий
+    # Проверка от кого пришло сообщение
     sub_quer = select(UserORM.platform_id).where(UserORM.id==message.sender_id).scalar_subquery()
     quer = select(PlatformORM).where(PlatformORM.id == sub_quer)
     user_platform = await select_data_one_or_none_quer(session, PlatformDTO, quer)
     if user_platform.platform_type != "bot":
-        change_chat = True
-        chat.is_waiting_answer = False
-    
+        if chat.is_waiting_answer != False:
+            # Если сообщение пришло от сотрудника чат больше не ожидающий
+            change_chat = True
+            chat.is_waiting_answer = False
+    else:
+        # Новое сообщение от клиента в архивном чате нужно указать ожидание ответа
+        if old_chat_is_archive == True:
+            change_chat = True
+            chat.is_waiting_answer = True
+
+
     # Отправка события
     if change_chat:
         await update_data(session, ChatORM, ChatORM.id==chat.id, **(chat.model_dump()))
         background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
 
-    if chat.is_waiting_answer:
-        background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message)
-    else:
-        background_tasks.add_task(send_messge_personal, platforms=platforms, message=message)
+    # if chat.is_waiting_answer:
+    #     background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message)
+    # else:
+    #     background_tasks.add_task(send_messge_personal, platforms=platforms, message=message)
+
+    background_tasks.add_task(send_messge_broadcast, platforms=platforms, message=message)
 
     log(LogMessage(time=None,heder="Сообщение отправлено в чат.", heder_dict={"message":message},body=res,level=log_en.DEBUG))
     return {"message_id": res.id}
