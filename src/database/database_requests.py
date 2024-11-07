@@ -202,25 +202,25 @@ temp
 """
 
 
-async def user_registration(session: AsyncSession, platform_name: str, name: str) -> UserDTO:
+async def user_registration(session: AsyncSession, platform_name: str, name: str, icon_url: str|None) -> UserDTO:
     """
     Регистрирует нового пользователя с клиентсеого сервера, используется полноценными клиентами.
     Возаращяет: UserDTO(id,platform_id,name).
     """
     platform_id = (await session.execute(select(PlatformORM.id).where(PlatformORM.platform_name == platform_name))).scalar()
-    res = await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name))
+    res = await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name, icon_url=icon_url))
     await session.commit()
-    return UserDTO(id=res.scalar(), platform_id=platform_id, name=name)
+    return UserDTO(id=res.scalar(), platform_id=platform_id, name=name, icon_url=icon_url)
 
 
-async def bot_user_registration(session: AsyncSession, platform_name: str, name: str) -> ChatUsersDTO:
+async def bot_user_registration(session: AsyncSession, platform_name: str, name: str, icon_url: str|None) -> ChatUsersDTO:
     """
     Регистрирует новго пользователя и саздаёт новый чат в который его добавляет.
     Возвращяет: ChatUsersDTO(user.id,chat.id).
     """
     platform_id = (await session.execute(select(PlatformORM.id).where(PlatformORM.platform_name == platform_name))).scalar()
-    bot_id = (await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name))).scalar()
-    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True, is_archive=False))).scalar()
+    bot_id = (await session.execute(insert(UserORM).returning(UserORM.id).values(platform_id=platform_id, name=name, icon_url = icon_url))).scalar()
+    chat_id = (await session.execute(insert(ChatORM).returning(ChatORM.id).values(name=name, is_waiting_answer = True, is_archive=False, icon_url=icon_url))).scalar()
     chat_users_orm = (await session.execute(insert(ChatUsersORM).returning(ChatUsersORM).values(user_id=bot_id, chat_id=chat_id,last_read_message_id=-1, user_in_chat = True))).scalar()
     chat_users = ChatUsersDTO.model_validate(chat_users_orm,from_attributes=True)
     await session.commit()

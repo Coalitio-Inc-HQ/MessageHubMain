@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from src.loging.logging_utility import log, LogMessage,log_en
 from src.api.messageHub.utils import send_http_request
 
-from src.database.schemes_temp import *
 
 from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
 
@@ -75,7 +74,7 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
     return {"message_id": res.id}
 
 
-async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO_TEMP):
+async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения всем платформам
     """
@@ -85,7 +84,7 @@ async def send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDT
          await send_http_request(base_url=platform.url, relative_url=settings.END_POINT_SEND_MESSAGE,json=dict_message)
 
 
-async def send_messge_personal(platforms: list[PlatformDTO], message: MessageDTO_TEMP):
+async def send_messge_personal(platforms: list[PlatformDTO], message: MessageDTO):
     """
     Отправка сообщения всем платформам
     """

@@ -7,7 +7,6 @@ from src.loging.logging_utility import log, LogMessage,log_en
 from .settings import settings
 
 from .database.schemes import ChatDTO, MessageDTO,UserDTO
-from .database.schemes_temp import ChatDTO_TEMP,ChatUsersDTO_TEMP,MessageDTO_TEMP
 
 async def lifespan(app: FastAPI):
     log(LogMessage(time=None,heder="Сервер запущен.", heder_dict=None,body=None,level=log_en.INFO))
@@ -47,17 +46,17 @@ async def root():
 
 
 @router_test.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT)
-async def root(chat: ChatDTO_TEMP, user: UserDTO):
+async def root(chat: ChatDTO, user: UserDTO):
     log(LogMessage(time=None,heder="Webhook add user to chat", heder_dict=None,body={"user":user,"chat":chat},level=log_en.INFO))
 
 
 @router_test.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_CHAT)
-async def root(chat: ChatDTO_TEMP):
+async def root(chat: ChatDTO):
     log(LogMessage(time=None,heder="Webhook add chat", heder_dict=None,body={"chat":chat},level=log_en.INFO))
 
 
 @router_test.post(settings.END_POINT_SEND_MESSAGE)
-async def root(message: MessageDTO_TEMP):
+async def root(message: MessageDTO):
     log(LogMessage(time=None,heder="Webhook sent message", heder_dict=None,body={"message":message},level=log_en.INFO))
 
 

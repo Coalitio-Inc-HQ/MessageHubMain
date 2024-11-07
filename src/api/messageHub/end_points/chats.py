@@ -9,7 +9,6 @@ from ....settings import settings
 from src.api.messageHub.utils import send_http_request
 from src.loging.logging_utility import log, LogMessage,log_en
 
-from src.database.schemes_temp import *
 
 from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
 
@@ -94,7 +93,7 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
     return res
 
 
-async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO_TEMP):
+async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO):
     """
     Отправка сообщений всем платформам о том, что пользователь добавлен в чат
     """

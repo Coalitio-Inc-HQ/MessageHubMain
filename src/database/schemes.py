@@ -13,6 +13,7 @@ class UserDTO(BaseModel):
     id: int
     platform_id: int
     name: str = Field(max_length=256)
+    icon_url: str | None = Field(max_length=256)
 
 
 class ChatDTO(BaseModel):
@@ -20,6 +21,7 @@ class ChatDTO(BaseModel):
     name: str = Field(max_length=256)
     is_waiting_answer: bool
     is_archive: bool
+    icon_url: str | None = Field(max_length=256)
 
 
 class ChatUsersDTO(BaseModel):

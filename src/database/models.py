@@ -21,12 +21,13 @@ class UserORM(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"))
     name: Mapped[str] = mapped_column(String(256))
-
+    icon_url: Mapped[str|None] = mapped_column(String(256))
 
 class ChatORM(Base):
     __tablename__ = "chat"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256))
+    icon_url: Mapped[str|None] = mapped_column(String(256))
     is_waiting_answer: Mapped[bool]
     is_archive: Mapped[bool]
 

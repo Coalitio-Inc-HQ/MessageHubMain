@@ -7,8 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from src.loging.logging_utility import log, LogMessage,log_en
 from src.api.messageHub.utils import send_http_request
 
-from src.database.schemes_temp import *
-
 import logging
 
 from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
@@ -25,6 +23,7 @@ class UserIn(BaseModel):
     """
     platform_name: str = Field(max_length=30)
     name: str = Field(max_length=256)
+    icon_url: str | None = Field(max_length=256, default=None)
 
 
 @router.post("/user_registration/bot")
@@ -33,7 +32,7 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
     Регистрирует пользователя из бота.
     """
     try:
-        res = await bot_user_registration(session=session, platform_name=user.platform_name, name=user.name)
+        res = await bot_user_registration(session=session, platform_name=user.platform_name, name=user.name, icon_url=user.icon_url)
     except IntegrityError as err:
         log(LogMessage(time=None,heder="Платформа не найдена.", 
                    heder_dict=err.args,body=
@@ -60,7 +59,7 @@ async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_ses
     Регистрирует пользователя из web.
     """
     try:
-        res = await user_registration(session=session, platform_name=user.platform_name, name=user.name)
+        res = await user_registration(session=session, platform_name=user.platform_name, name=user.name, icon_url=user.icon_url)
     except IntegrityError as err:
         log(LogMessage(time=None,heder="Платформа не найдена.", 
                    heder_dict=err.args,body=
