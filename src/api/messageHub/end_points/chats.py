@@ -114,8 +114,9 @@ async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = B
         )
     )
     await update_data(session, ChatUsersORM,ChatUsersORM.chat_id==chat_id,ChatUsersORM.user_id.in_(sunq),user_in_chat=False)
-    await update_data(session, ChatORM, ChatORM.id==chat_id, is_archive=True)
+    await update_data(session, ChatORM, ChatORM.id==chat_id, is_archive=True, is_waiting_answer = False)
 
     chat = await select_data_one_or_none(session, ChatORM, ChatDTO, ChatORM.id==chat_id)
     platforms = await get_all_platform(session=session)
     background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
+    return {"status":"ok"}
