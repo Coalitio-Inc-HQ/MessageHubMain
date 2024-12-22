@@ -141,8 +141,7 @@ async def get_messges_from_chat(session: AsyncSession, chat_id: int, count: int,
     if offset_message_id < 0:
         res = await session.execute(select(MessageORM).where(MessageORM.chat_id == chat_id).order_by(MessageORM.sended_at.desc(), MessageORM.id.desc()).limit(count))
     else:
-        subq = select(MessageORM.sended_at).where(MessageORM.id == offset_message_id).scalar_subquery()
-        res = await session.execute(select(MessageORM).where(MessageORM.chat_id == chat_id, MessageORM.sended_at <= subq).order_by(MessageORM.sended_at.desc(), MessageORM.id.desc()).limit(count))
+        res = await session.execute(select(MessageORM).where(MessageORM.chat_id == chat_id, MessageORM.id < offset_message_id).order_by(MessageORM.sended_at.desc(), MessageORM.id.desc()).limit(count))
     res_orm = res.scalars().all()
     res_dto = [MessageDTO.model_validate(row, from_attributes=True) for row in res_orm[::-1]]
     return res_dto
