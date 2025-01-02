@@ -142,6 +142,3 @@ async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), off
     log(LogMessage(time=None,heder="Получены сообщения из чата.", heder_dict={"chat_id":chat_id, "count":count, "offset_message_id":offset_message_id},body=res,level=log_en.DEBUG))
 
     return res
-
-
-

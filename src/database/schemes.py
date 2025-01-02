@@ -23,6 +23,10 @@ class ChatDTO(BaseModel):
     is_archive: bool
     icon_url: str | None = Field(max_length=256)
 
+class ExtChatDTO(ChatDTO):
+    last_read_message_id: int | None = None
+    user_in_chat: bool = False
+
 
 class ChatUsersDTO(BaseModel):
     user_id: int
@@ -44,7 +48,3 @@ class MessageDTO(BaseModel):
     sended_at: datetime
     text: str | None
     attachments: dict
-
-class ExtChatDTO(ChatDTO):
-    last_read_message_id: int | None = None
-    user_in_chat: bool = False
