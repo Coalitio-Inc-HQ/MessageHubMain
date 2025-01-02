@@ -14,7 +14,9 @@ from src.database.utilities import insert_data, update_data, select_data_arr, se
 
 from sqlalchemy import or_
 
-from src.api.messageHub.event import call_handlers_update_chat
+from src.api.messageHub.event import call_handlers_update_chat, call_handlers_user_add_to_chat, call_handlers_set_last_read_message_id
+
+import uuid
 
 router = APIRouter()
 
@@ -44,8 +46,9 @@ async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = D
     log(LogMessage(time=None,heder="Получен список пользователей чата.", heder_dict={"chat_id":chat_id},body=res,level=log_en.DEBUG))
     return res
 
+
 @router.post("/connect_user_to_chat")
-async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int = Body(), chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int = Body(), chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
     """
     Подключает к чату.
     """
@@ -69,42 +72,41 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
 
     # получаем нужную информацию для оповещения
     chat = await get_chat_by_id(session=session, chat_id=chat_id)
-
     user = await get_user_by_user_id(session=session, user_id=user_id)
 
     # Выбрать все платформы
-    platforms = await get_platforms_by_chat_id(session=session, chat_id=chat_id)
+    # platforms = await get_platforms_by_chat_id(session=session, chat_id=chat_id)
+    platforms = await get_all_platform(session=session)
 
     # проверяем присудствует ли платформа добовляемого пользователя в списке
-    is_fund_platform = False
-    for platf in platforms:
-        if platf.id == user.platform_id:
-            is_fund_platform = True
-            break
+    # is_fund_platform = False
+    # for platf in platforms:
+    #     if platf.id == user.platform_id:
+    #         is_fund_platform = True
+    #         break
 
-    if not is_fund_platform:
-        platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
+    # if not is_fund_platform:
+    #     platforms.append(platform=await get_platform_by_user_id(session=session, user_id=user_id))
 
     # оповещяем платформу о том, что в чат был добавленн новый пользователь
-    background_tasks.add_task(send_notifications_user_added_to_chat,platforms=platforms, user=user, chat=chat)
+    background_tasks.add_task(call_handlers_user_add_to_chat, platforms=platforms, user=user, chat=chat, event_id=event_id)
 
     log(LogMessage(time=None,heder="Пользователь добавлен в чат.", heder_dict={"chat_id":chat_id, "user_id":user_id},body={"chat":chat,"user":user},level=log_en.DEBUG))
     
     return res
 
 
-async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO):
-    """
-    Отправка сообщений всем платформам о том, что пользователь добавлен в чат
-    """
-    for platform in platforms:
-        if not platform.platform_type == "bot":
-            await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
-
+# async def send_notifications_user_added_to_chat(platforms: list[PlatformDTO], user: UserDTO, chat: ChatDTO):
+#     """
+#     Отправка сообщений всем платформам о том, что пользователь добавлен в чат
+#     """
+#     for platform in platforms:
+#         if not platform.platform_type == "bot":
+#             await send_http_request(base_url=platform.url,relative_url=settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT, json={"user": user.model_dump(), "chat": chat.model_dump()})
 
 
 @router.post("/remove_to_archive")
-async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
     """
     Уберает чат в архив.
     """
@@ -118,5 +120,22 @@ async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = B
 
     chat = await select_data_one_or_none(session, ChatORM, ChatDTO, ChatORM.id==chat_id)
     platforms = await get_all_platform(session=session)
-    background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
+    background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat, event_id=event_id)
     return {"status":"ok"}
+
+
+@router.post("/set_last_read_message_id")
+async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: int = Body(), user_id: int = Body(), last_read_message_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
+    """
+    Устанавливает индентификатор последнего прочитанного сообщения.
+    """
+    await update_data(session, ChatUsersORM,ChatUsersORM.chat_id==chat_id,ChatUsersORM.user_id==user_id,last_read_message_id=last_read_message_id)
+
+    subq = select(UserORM.platform_id).where(
+        UserORM.id == user_id).scalar_subquery()
+    platforms = select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq )
+
+    background_tasks.add_task(call_handlers_set_last_read_message_id, platforms=platforms, chat_id=chat_id, user_id=user_id, last_read_message_id=last_read_message_id, event_id=event_id)
+
+    return {"status":"ok"}
+

@@ -42,7 +42,7 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
                     level=log_en.ERROR))
         raise HTTPException(status_code=422, detail="Платформа не найдена")
 
-    # получаем мнформацию для оповещения платформ
+    # получаем информацию для оповещения платформ
     platforms = await get_all_platform(session=session)
     chat = await get_chat_by_id(session=session, chat_id=res.chat_id)
 
