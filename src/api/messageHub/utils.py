@@ -18,7 +18,7 @@ async def send_http_request(base_url:str, relative_url:str, json: Any|None):
                         "base_url":base_url, 
                         "relative_url":relative_url, 
                         "json":json,
-                        "response":error.response.json()
+                        "response":error.response.json(),
                     },
                     level=log_en.ERROR))
         except Exception as error:

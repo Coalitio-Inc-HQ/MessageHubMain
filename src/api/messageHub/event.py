@@ -27,7 +27,7 @@ async def handler_update_chat(platforms: list[PlatformDTO], chat: ChatDTO, event
     event = Event(
         name="chat.update",
         data={
-            chat: chat
+            "chat": chat
         },
         id=event_id
     )
@@ -45,8 +45,8 @@ async def handler_user_add_to_chat(platforms: list[PlatformDTO], chat: ChatDTO, 
     event = Event(
         name="chat.add.user",
         data={
-            chat: chat,
-            user: user
+            "chat": chat,
+            "user": user
         },
         id=event_id
     )
@@ -64,9 +64,9 @@ async def handler_set_last_read_message_id(platforms: list[PlatformDTO], chat_id
     event = Event(
         name="chat.set.last_read_message_id",
         data={
-            chat_id: chat_id,
-            user_id: user_id,
-            last_read_message_id: last_read_message_id,
+            "chat_id": chat_id,
+            "user_id": user_id,
+            "last_read_message_id": last_read_message_id,
         },
         id=event_id
     )
@@ -84,7 +84,7 @@ async def handler_send_messge_broadcast(platforms: list[PlatformDTO], message: M
     event = Event(
         name="chat.new_message",
         data={
-            message: message,
+            "message": message,
         },
         id=event_id
     )
