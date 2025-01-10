@@ -60,13 +60,14 @@ async def call_handlers_user_add_to_chat(platforms: list[PlatformDTO], chat: Cha
 
 
 # set_last_read_message_id
-async def handler_set_last_read_message_id(platforms: list[PlatformDTO], chat_id: int, user_id: int, last_read_message_id: int, event_id: uuid.UUID):
+async def handler_set_last_read_message_id(platforms: list[PlatformDTO], chat_id: int, user_id: int, last_read_message_id: int, count: int, event_id: uuid.UUID):
     event = Event(
         name="chat.set.last_read_message_id",
         data={
             "chat_id": chat_id,
             "user_id": user_id,
             "last_read_message_id": last_read_message_id,
+            "count": count,
         },
         id=event_id
     )
@@ -74,9 +75,9 @@ async def handler_set_last_read_message_id(platforms: list[PlatformDTO], chat_id
 
 handlers_set_last_read_message_id = [handler_set_last_read_message_id]
 
-async def call_handlers_set_last_read_message_id(platforms: list[PlatformDTO], chat_id: int, user_id: int, last_read_message_id: int, event_id: uuid.UUID = uuid.uuid4()):
+async def call_handlers_set_last_read_message_id(platforms: list[PlatformDTO], chat_id: int, user_id: int, last_read_message_id: int, count: int, event_id: uuid.UUID = uuid.uuid4()):
     for item in handlers_set_last_read_message_id:
-        await item(platforms, chat_id, user_id, last_read_message_id, event_id)
+        await item(platforms, chat_id, user_id, last_read_message_id, count, event_id)
 
 
 # send_messge_broadcast

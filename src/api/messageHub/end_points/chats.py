@@ -134,9 +134,11 @@ async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: i
 
     subq = select(UserORM.platform_id).where(
         UserORM.id == user_id).scalar_subquery()
-    platforms = select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq )
+    platforms = select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq)
 
-    background_tasks.add_task(call_handlers_set_last_read_message_id, platforms=platforms, chat_id=chat_id, user_id=user_id, last_read_message_id=last_read_message_id, event_id=event_id)
+    count = (await session.execute(select(func.count()).select_from(MessageORM).where(MessageORM.id>last_read_message_id, MessageORM.chat_id==chat_id))).scalar_one_or_none()
 
-    return {"status":"ok"}
+    background_tasks.add_task(call_handlers_set_last_read_message_id, platforms=platforms, chat_id=chat_id, user_id=user_id, last_read_message_id=last_read_message_id, count=count, event_id=event_id)
+
+    return {"status":"ok", "count": count}
 
