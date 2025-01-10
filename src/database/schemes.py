@@ -26,6 +26,7 @@ class ChatDTO(BaseModel):
 class ExtChatDTO(ChatDTO):
     last_read_message_id: int | None = None
     user_in_chat: bool = False
+    count_unredeble_messgaes: int | None = None
 
 
 class ChatUsersDTO(BaseModel):

@@ -94,8 +94,11 @@ async def select_data_arr_quer(session: AsyncSession, return_model: type, querty
     ret = []
     for item in res:
         d = {}
-        for i in item:
-            d.update(i.__dict__)
+        for i, v in enumerate(item):
+            if hasattr(v,"__dict__"):
+                d.update(v.__dict__)
+            else:
+                d[item._fields[i]]=v
         ret.append(return_model.model_validate(d, from_attributes=True))
     return ret
 
