@@ -134,7 +134,7 @@ async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: i
 
     subq = select(UserORM.platform_id).where(
         UserORM.id == user_id).scalar_subquery()
-    platforms = select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq)
+    platforms = await select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq)
 
     count = (await session.execute(select(func.count()).select_from(MessageORM).where(MessageORM.id>last_read_message_id, MessageORM.chat_id==chat_id))).scalar_one_or_none()
 
