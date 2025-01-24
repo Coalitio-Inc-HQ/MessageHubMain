@@ -39,3 +39,7 @@ async def registr_platform(platform_type: str, platform: PlatformIn, session: As
         platform_id = await insert_data(session, PlatformORM, platform_data,return_atr=["id"])
         log(LogMessage(time=None,heder="Обнавлена платформа.", heder_dict={"platform_type":platform_type, "platform": platform},body={"platform_id":platform_id},level=log_en.INFO))
         return {"status": "ok"}
+
+@router.post("/get_platforms")
+async def get_platforms(session: AsyncSession = Depends(get_session)):
+    return await select_data_arr(session, PlatformORM, OutPlatformDTO)

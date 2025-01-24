@@ -31,7 +31,7 @@ class ChatORM(Base):
     is_waiting_answer: Mapped[bool]
     is_archive: Mapped[bool]
     last_message_send_at: Mapped[datetime | None]
-
+    platform_id: Mapped[int|None] = mapped_column(ForeignKey("platform.id"))
 
 class ChatUsersORM(Base):
     __tablename__ = "chat_users"

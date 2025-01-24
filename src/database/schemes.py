@@ -8,6 +8,9 @@ class PlatformDTO(BaseModel):
     platform_name: str = Field(max_length=30)
     url: str = Field(max_length=256)
 
+class OutPlatformDTO(BaseModel):
+    id: int
+    platform_name: str = Field(max_length=30)
 
 class UserDTO(BaseModel):
     id: int
@@ -23,11 +26,13 @@ class ChatDTO(BaseModel):
     is_archive: bool
     icon_url: str | None = Field(max_length=256)
     last_message_send_at: datetime| None = None
+    platform_id: int|None = None
 
 class ExtChatDTO(ChatDTO):
     last_read_message_id: int | None = None
     user_in_chat: bool = False
     count_unredeble_messgaes: int | None = None
+    platform_name: str|None = None
 
 
 class ChatUsersDTO(BaseModel):
