@@ -28,11 +28,11 @@ async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_s
     """
     
     sub = select(func.count()).select_from(MessageORM).where(MessageORM.chat_id==ChatUsersORM.chat_id,MessageORM.id>ChatUsersORM.last_read_message_id).scalar_subquery()
-    chats = await select_data_arr_quer(session, ExtChatDTO, select(ChatORM,ChatUsersORM, PlatformORM, sub.label("count_unredeble_messgaes")).join(ChatUsersORM).where(ChatUsersORM.user_id==user_id).join(PlatformORM, isouter=True))
+    chats = await select_data_arr_quer(session, ExtChatDTO, select(ChatORM,ChatUsersORM, sub.label("count_unredeble_messgaes")).join(ChatUsersORM).where(ChatUsersORM.user_id==user_id))
     
     subqer = select(ChatUsersORM.chat_id).where(ChatUsersORM.user_id==user_id)
     # unconn_chats = await select_data_arr_quer(session,ExtChatDTO,select(ChatORM).where(ChatORM.id.not_in(subqer), ChatORM.is_waiting_answer == True))
-    unconn_chats = await select_data_arr_quer(session,ExtChatDTO,select(ChatORM, PlatformORM).where(ChatORM.id.not_in(subqer)).join(PlatformORM, isouter=True))
+    unconn_chats = await select_data_arr_quer(session,ExtChatDTO,select(ChatORM).where(ChatORM.id.not_in(subqer)))
     chats = chats + unconn_chats
 
     return chats
