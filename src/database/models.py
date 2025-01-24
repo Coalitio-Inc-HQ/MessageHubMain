@@ -30,6 +30,7 @@ class ChatORM(Base):
     icon_url: Mapped[str|None] = mapped_column(String(256))
     is_waiting_answer: Mapped[bool]
     is_archive: Mapped[bool]
+    last_message_send_at: Mapped[datetime | None]
 
 
 class ChatUsersORM(Base):

@@ -19,6 +19,7 @@ from src.database.utilities import insert_data, update_data, select_data_arr, se
 from src.api.messageHub.event import call_handlers_update_chat, call_handlers_send_messge_broadcast
 
 import uuid
+import copy
 
 router = APIRouter()
 
@@ -40,10 +41,10 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
     chat = await select_data_one_or_none(session, ChatORM, ChatDTO, ChatORM.id==message.chat_id)
     old_chat_is_archive = chat.is_archive
 
-    change_chat = False
+    emit_event_change_chat = False
     # Если чат был в архиве то необходимо вывести из архива
     if chat.is_archive:
-        change_chat = True
+        emit_event_change_chat = True
         chat.is_archive = False
 
     # Проверка от кого пришло сообщение
@@ -53,18 +54,20 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
     if user_platform.platform_type != "bot":
         if chat.is_waiting_answer != False:
             # Если сообщение пришло от сотрудника чат больше не ожидающий
-            change_chat = True
+            emit_event_change_chat = True
             chat.is_waiting_answer = False
     else:
         # Новое сообщение от клиента в архивном чате нужно указать ожидание ответа
         if old_chat_is_archive == True:
-            change_chat = True
+            emit_event_change_chat = True
             chat.is_waiting_answer = True
 
 
+    chat.last_message_send_at =  copy.copy(message.sended_at).replace(tzinfo=None)
+    await update_data(session, ChatORM, ChatORM.id==chat.id, **(chat.model_dump()))
+
     # Отправка события
-    if change_chat:
-        await update_data(session, ChatORM, ChatORM.id==chat.id, **(chat.model_dump()))
+    if emit_event_change_chat:
         background_tasks.add_task(call_handlers_update_chat, platforms=platforms, chat=chat)
 
     # if chat.is_waiting_answer:
