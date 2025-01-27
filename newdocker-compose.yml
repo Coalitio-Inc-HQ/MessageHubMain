@@ -1,0 +1,53 @@
+version: "3.7"
+services:
+  mh_main_db:
+    image: postgres:16
+    container_name: mh_main_db
+    command: -p 5430
+    expose:
+      - 5430
+    env_file:
+      - .env-db
+    ports:
+      - 5430:5430
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.mh_main_db_https.redirectscheme.scheme=https
+      - traefik.http.routers.mh_main_db.entrypoints=web
+      - traefik.http.routers.mh_main_db.middlewares=mh_main_db_https@docker
+      - traefik.http.routers.mh_main_db.rule=Host(`mh-main-db.server_name.youdomain`)
+      - traefik.http.routers.mh_main_db_https.entrypoints=websecure
+      - traefik.http.routers.mh_main_db_https.rule=Host(`mh-main-db.server_name.youdomain`)
+      - traefik.http.routers.mh_main_db_https.tls=true
+      - traefik.http.routers.mh_main_db_https.tls.certresolver=le
+
+  mh_main:
+    build:
+      context: .
+    env_file:
+      - .env-doc
+    container_name: mh_main
+    ports:
+      - 8001:8001
+    # depends_on:
+    #   - db
+    # extra_hosts:
+      # - "host.docker.internal:host-gateway"
+    volumes:
+      - log:/app/log
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.mh_main_https.redirectscheme.scheme=https
+      - traefik.http.routers.mh_main.entrypoints=web
+      - traefik.http.routers.mh_main.middlewares=mh_main_https@docker
+      - traefik.http.routers.mh_main.rule=Host(`mh-main.server_name.youdomain`)
+      - traefik.http.routers.mh_main_https.entrypoints=websecure
+      - traefik.http.routers.mh_main_https.rule=Host(`mh-main.server_name.youdomain`)
+      - traefik.http.routers.mh_main_https.tls=true
+      - traefik.http.routers.mh_main_https.tls.certresolver=le
+volumes:
+  log:
+networks:
+  default:
+    external:
+      name: traefik_default
