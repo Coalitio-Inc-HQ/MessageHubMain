@@ -9,6 +9,8 @@ router = APIRouter()
 
 from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer
 
+from src.auth import verify_api_key
+
 class PlatformIn(BaseModel):
     """
     Модель входных данных для регистрации платформы
@@ -18,7 +20,7 @@ class PlatformIn(BaseModel):
 
 
 @router.post("/platform_registration/{platform_type}")
-async def registr_platform(platform_type: str, platform: PlatformIn, session: AsyncSession = Depends(get_session)):
+async def registr_platform(platform_type: str, platform: PlatformIn, session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Регистрирует платформу.
     """
@@ -41,5 +43,5 @@ async def registr_platform(platform_type: str, platform: PlatformIn, session: As
         return {"status": "ok"}
 
 @router.post("/get_platforms")
-async def get_platforms(session: AsyncSession = Depends(get_session)):
+async def get_platforms(session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     return await select_data_arr(session, PlatformORM, OutPlatformDTO)

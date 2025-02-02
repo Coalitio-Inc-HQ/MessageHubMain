@@ -9,7 +9,7 @@ from src.settings import settings
 async def send_http_request(base_url:str, relative_url:str, json: Any|None):
     async with AsyncClient(base_url=base_url) as clinet:
         try:
-            response = await clinet.post(relative_url, json=json)
+            response = await clinet.post(relative_url, json=json, headers={"API-KEY": settings.OUT_API_KEY})
             response.raise_for_status()
         except HTTPStatusError as error:
             try:

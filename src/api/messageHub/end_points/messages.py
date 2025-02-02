@@ -21,11 +21,13 @@ from src.api.messageHub.event import call_handlers_update_chat, call_handlers_se
 import uuid
 import copy
 
+from src.auth import verify_api_key
+
 router = APIRouter()
 
 
 @router.post("/send_a_message_to_chat")
-async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: MessageDTO, event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
+async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: MessageDTO, event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Отправляет сообщение в чат.
     """
@@ -103,7 +105,7 @@ async def send_a_message_to_chat(background_tasks: BackgroundTasks, message: Mes
 
 
 @router.post("/get_messages_from_chat")
-async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), include_messege: bool = Body(), mode: Literal["up","down"] = Body() , session: AsyncSession = Depends(get_session)):
+async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), offset_message_id: int = Body(), include_messege: bool = Body(), mode: Literal["up","down"] = Body() , session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Возвращает сообщения из чата.
     """

@@ -29,6 +29,9 @@ class Settings(BaseSettings):
 
     LOG_PATH:str
 
+    API_KEY: str | None
+    OUT_API_KEY: str | None
+
     @property
     def DATABASE_URL_ASINC(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

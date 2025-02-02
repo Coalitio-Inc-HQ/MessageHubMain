@@ -13,6 +13,7 @@ from src.database.utilities import insert_data, update_data, select_data_arr, se
 
 from src.api.messageHub.event import call_handlers_update_chat
 
+from src.auth import verify_api_key
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ class UserIn(BaseModel):
 
 
 @router.post("/user_registration/bot")
-async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, session: AsyncSession = Depends(get_session)):
+async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Регистрирует пользователя из бота.
     """
@@ -54,7 +55,7 @@ async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, sess
 
 
 @router.post("/user_registration/web")
-async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_session)):
+async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Регистрирует пользователя из web.
     """
@@ -74,7 +75,7 @@ async def registr_web_user(user: UserIn, session: AsyncSession = Depends(get_ses
 
 
 @router.post("/employees")
-async def get_employees(session: AsyncSession = Depends(get_session)):
+async def get_employees(session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Получает сотрудников организации
     """

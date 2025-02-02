@@ -18,11 +18,13 @@ from src.api.messageHub.event import call_handlers_update_chat, call_handlers_us
 
 import uuid
 
+from src.auth import verify_api_key
+
 router = APIRouter()
 
 
 @router.post("/get_chats")
-async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Возвращает чаты пользователя.
     """
@@ -39,7 +41,7 @@ async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_s
 
 
 @router.post("/get_users_by_chat_id")
-async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = Depends(get_session)):
+async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Возвращает участников чата.
     """
@@ -49,7 +51,7 @@ async def get_users_by_chat_id_(chat_id: int = Body(), session: AsyncSession = D
 
 
 @router.post("/connect_user_to_chat")
-async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int = Body(), chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
+async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int = Body(), chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Подключает к чату.
     """
@@ -107,7 +109,7 @@ async def connect_user_to_chat_(background_tasks: BackgroundTasks, user_id: int 
 
 
 @router.post("/remove_to_archive")
-async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
+async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Уберает чат в архив.
     """
@@ -126,7 +128,7 @@ async def remove_to_archive_(background_tasks: BackgroundTasks, chat_id: int = B
 
 
 @router.post("/set_last_read_message_id")
-async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: int = Body(), user_id: int = Body(), last_read_message_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session)):
+async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: int = Body(), user_id: int = Body(), last_read_message_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
     """
     Устанавливает индентификатор последнего прочитанного сообщения.
     """
