@@ -13,7 +13,10 @@ async def lifespan(app: FastAPI):
     yield
     log(LogMessage(time=None,heder="Сервер остановлен.", heder_dict=None,body=None,level=log_en.INFO))
 
-app = FastAPI(lifespan=lifespan)
+if not settings.API_KEY:
+    app = FastAPI(lifespan=lifespan)
+else:
+    app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
 
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, error: Exception):
@@ -37,27 +40,27 @@ app.add_middleware(
 # тест хуков
 app.include_router(router)
 
-router_test = APIRouter()
+# router_test = APIRouter()
 
 
-@router_test.get("/")
-async def root():
-    return RedirectResponse("/docs")
+# @router_test.get("/")
+# async def root():
+#     return RedirectResponse("/docs")
 
 
-@router_test.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT)
-async def root(chat: ChatDTO, user: UserDTO):
-    log(LogMessage(time=None,heder="Webhook add user to chat", heder_dict=None,body={"user":user,"chat":chat},level=log_en.INFO))
+# @router_test.post(settings.END_POINT_SEND_NOTIFICATION_USER_ADDED_TO_CHAT)
+# async def root(chat: ChatDTO, user: UserDTO):
+#     log(LogMessage(time=None,heder="Webhook add user to chat", heder_dict=None,body={"user":user,"chat":chat},level=log_en.INFO))
 
 
-@router_test.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_CHAT)
-async def root(chat: ChatDTO):
-    log(LogMessage(time=None,heder="Webhook add chat", heder_dict=None,body={"chat":chat},level=log_en.INFO))
+# @router_test.post(settings.END_POINT_SEND_NOTIFICATION_ADDED_CHAT)
+# async def root(chat: ChatDTO):
+#     log(LogMessage(time=None,heder="Webhook add chat", heder_dict=None,body={"chat":chat},level=log_en.INFO))
 
 
-@router_test.post(settings.END_POINT_SEND_MESSAGE)
-async def root(message: MessageDTO):
-    log(LogMessage(time=None,heder="Webhook sent message", heder_dict=None,body={"message":message},level=log_en.INFO))
+# @router_test.post(settings.END_POINT_SEND_MESSAGE)
+# async def root(message: MessageDTO):
+#     log(LogMessage(time=None,heder="Webhook sent message", heder_dict=None,body={"message":message},level=log_en.INFO))
 
 
-app.include_router(router_test, tags=["webhook"])
+# app.include_router(router_test, tags=["webhook"])
