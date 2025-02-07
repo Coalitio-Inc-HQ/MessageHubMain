@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-
+from typing import Any
 
 class PlatformDTO(BaseModel):
     id: int
@@ -48,6 +48,15 @@ class ChatUsersDTO(BaseModel):
     """
 
 
+class MessageEditDTO(BaseModel):
+    id: int | None
+    chat_id: int
+    sender_id: int
+    sended_at: datetime
+    text: str | None
+    attachments: dict
+    edit_at: datetime | None = None
+
 class MessageDTO(BaseModel):
     id: int | None
     chat_id: int
@@ -55,3 +64,7 @@ class MessageDTO(BaseModel):
     sended_at: datetime
     text: str | None
     attachments: dict
+    is_hide: bool = False
+    delete_at: datetime | None = None
+    edit_data: list[MessageEditDTO] | None = None
+    edit_at: datetime | None = None

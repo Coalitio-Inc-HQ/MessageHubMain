@@ -16,7 +16,7 @@ from src.api.messageHub.utils import send_http_request
 
 from src.database.utilities import insert_data, update_data, select_data_arr, select_data_one_or_none, select_data_one_or_none_quer,select_data_arr_quer
 
-from src.api.messageHub.event import call_handlers_update_chat, call_handlers_send_messge_broadcast
+from src.api.messageHub.event import call_handlers_update_chat, call_handlers_send_messge_broadcast, call_handlers_delete_messge
 
 import uuid
 import copy
@@ -147,3 +147,28 @@ async def get_messges_from_chat_(chat_id: int = Body(), count: int = Body(), off
     log(LogMessage(time=None,heder="Получены сообщения из чата.", heder_dict={"chat_id":chat_id, "count":count, "offset_message_id":offset_message_id},body=res,level=log_en.DEBUG))
 
     return res
+
+
+@router.post("/delete_a_message_from_chat")
+async def delete_a_message_from_chat(background_tasks: BackgroundTasks, user_id:int = Body(), message_id: int = Body(), event_id: uuid.UUID = Body(), session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
+    """
+    Удаляет сообщение из чата
+    """
+    message = await select_data_one_or_none(session, MessageORM, MessageDTO, MessageORM.id == message_id)
+
+    if (not message):
+        raise HTTPException(status_code=422, detail="Сообщение не найдено")
+    if (message.sender_id != user_id):
+        raise HTTPException(status_code=422, detail="Сообщение не принадлежит пользователю")
+
+    message.is_hide = True
+    message.delete_at = datetime.datetime.now()
+
+    await update_messege(session, message)
+
+    platforms = await get_all_platform(session=session)
+
+    background_tasks.add_task(call_handlers_delete_messge, platforms=platforms, message=message, event_id=event_id)
+
+    log(LogMessage(time=None,heder="Сообщение удалено в чате.", heder_dict={"message":message},body={},level=log_en.DEBUG))
+    return {"status": "ok"}

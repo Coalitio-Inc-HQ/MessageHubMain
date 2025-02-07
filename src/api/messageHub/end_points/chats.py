@@ -29,7 +29,7 @@ async def get_chats(user_id: int = Body(), session: AsyncSession = Depends(get_s
     Возвращает чаты пользователя.
     """
     
-    sub = select(func.count()).select_from(MessageORM).where(MessageORM.chat_id==ChatUsersORM.chat_id,MessageORM.id>ChatUsersORM.last_read_message_id).scalar_subquery()
+    sub = select(func.count()).select_from(MessageORM).where(MessageORM.chat_id==ChatUsersORM.chat_id,MessageORM.id>ChatUsersORM.last_read_message_id, MessageORM.is_hide==False).scalar_subquery()
     chats = await select_data_arr_quer(session, ExtChatDTO, select(ChatORM,ChatUsersORM, sub.label("count_unredeble_messgaes")).join(ChatUsersORM).where(ChatUsersORM.user_id==user_id))
     
     subqer = select(ChatUsersORM.chat_id).where(ChatUsersORM.user_id==user_id)
@@ -138,7 +138,7 @@ async def set_last_read_message_id(background_tasks: BackgroundTasks, chat_id: i
         UserORM.id == user_id).scalar_subquery()
     platforms = await select_data_arr(session, PlatformORM, PlatformDTO, PlatformORM.id == subq)
 
-    count = (await session.execute(select(func.count()).select_from(MessageORM).where(MessageORM.id>last_read_message_id, MessageORM.chat_id==chat_id))).scalar_one_or_none()
+    count = (await session.execute(select(func.count()).select_from(MessageORM).where(MessageORM.id>last_read_message_id, MessageORM.chat_id==chat_id, MessageORM.is_hide==False))).scalar_one_or_none()
 
     background_tasks.add_task(call_handlers_set_last_read_message_id, platforms=platforms, chat_id=chat_id, user_id=user_id, last_read_message_id=last_read_message_id, count=count, event_id=event_id)
 

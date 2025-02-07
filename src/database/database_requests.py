@@ -71,6 +71,25 @@ async def save_messege(session: AsyncSession, message: MessageDTO) -> MessageDTO
     return message
 
 
+async def update_messege(session: AsyncSession, message: MessageDTO):
+    """
+    Обновляет сообщение в БД.
+    """
+    # message.sended_at = message.sended_at.astimezone(
+    #     datetime.timezone.utc).replace(tzinfo=None)
+    # if message.delete_at:
+    #     message.delete_at = message.delete_at.astimezone(
+    #         datetime.timezone.utc).replace(tzinfo=None)
+    # if message.edit_at:
+    #     message.edit_at = message.edit_at.astimezone(
+    #         datetime.timezone.utc).replace(tzinfo=None)
+    data = message.model_dump()
+    res = await session.execute(update(MessageORM).where(MessageORM.id == message.id).values(
+        **data
+    ))
+    await session.commit()
+
+
 async def get_users_by_chat_id(session: AsyncSession, chat_id: int) -> list[UserDTO]:
     """
     Получает всех пользователей чата.

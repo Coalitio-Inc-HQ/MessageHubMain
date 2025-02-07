@@ -96,3 +96,21 @@ handlers_send_messge_broadcast = [handler_send_messge_broadcast]
 async def call_handlers_send_messge_broadcast(platforms: list[PlatformDTO], message: MessageDTO, event_id: uuid.UUID = uuid.uuid4()):
     for item in handlers_send_messge_broadcast:
         await item(platforms, message, event_id)
+
+
+# delete_messge_
+async def handler_delete_messge(platforms: list[PlatformDTO], message: MessageDTO, event_id: uuid.UUID):
+    event = Event(
+        name="chat.delete_message",
+        data={
+            "message": message,
+        },
+        id=event_id
+    )
+    await send_event(platforms,event)
+
+handlers_delete_messge = [handler_delete_messge]
+
+async def call_handlers_delete_messge(platforms: list[PlatformDTO], message: MessageDTO, event_id: uuid.UUID = uuid.uuid4()):
+    for item in handlers_delete_messge:
+        await item(platforms, message, event_id)

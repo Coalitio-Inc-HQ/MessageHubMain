@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, CheckConstraint, text, ForeignKey, JSON
 from datetime import datetime
-
+from typing import Any
 
 class Base(DeclarativeBase):
     pass
@@ -40,7 +40,6 @@ class ChatUsersORM(Base):
     last_read_message_id: Mapped[int | None]
     user_in_chat: Mapped[bool]
 
-
 class MessageORM(Base):
     __tablename__ = "message"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -49,3 +48,7 @@ class MessageORM(Base):
     sended_at: Mapped[datetime]
     text: Mapped[str | None]
     attachments: Mapped[dict] = mapped_column(JSON)
+    is_hide: Mapped[bool]  = mapped_column(Boolean, default=False)
+    delete_at: Mapped[datetime | None] = None
+    edit_data: Mapped[Any | None] = mapped_column(JSON, default= None)
+    edit_at: Mapped[datetime | None] = None
