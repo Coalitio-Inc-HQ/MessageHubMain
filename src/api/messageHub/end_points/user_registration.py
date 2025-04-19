@@ -17,6 +17,8 @@ from src.auth import verify_api_key
 
 router = APIRouter()
 
+class NullFeld:
+    pass
 
 class UserIn(BaseModel):
     """
@@ -26,6 +28,14 @@ class UserIn(BaseModel):
     name: str = Field(max_length=256)
     icon_url: str | None = Field(max_length=256, default=None)
 
+class UserUpDate(BaseModel):
+    """
+    Модель обновления пользователя
+    """
+    id: int
+    name: str = Field(max_length=256, default=NullFeld)
+    icon_url: str | None = Field(max_length=256, default=NullFeld)
+ 
 
 @router.post("/user_registration/bot")
 async def registr_bot_user(background_tasks: BackgroundTasks, user: UserIn, session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
@@ -82,3 +92,20 @@ async def get_employees(session: AsyncSession = Depends(get_session), api_key = 
 
     employees = await select_data_arr_quer(session,UserDTO,select(UserORM).join(PlatformORM).where(PlatformORM.platform_name=="web"))
     return employees
+
+@router.post("/update_user")
+async def update_user(user: UserUpDate,session: AsyncSession = Depends(get_session), api_key = Depends(verify_api_key)):
+    """
+    Обновляет свеения о пользователе.
+    """
+    update_dict = user.model_dump()
+    update_dict.pop("id")
+    pop_keys = []
+    for key, value in update_dict.items():
+        if (key == NullFeld):
+            pop_keys.append(key)
+    for key in pop_keys:
+        update_dict.pop(key)
+    
+    await update_data(session, UserORM, UserORM.id==user.id, **update_dict)
+    return {"status":"ok"}
