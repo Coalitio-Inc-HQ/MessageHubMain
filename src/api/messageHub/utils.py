@@ -12,35 +12,38 @@ retries = 5
 delay = 1
 
 async def send_http_request(base_url:str, relative_url:str, json: Any|None):
-    async with AsyncClient(base_url=base_url) as clinet:
-        for attempt in range(1, retries + 1):
-            try:
-                response = await clinet.post(relative_url, json=json, headers={"API-KEY": settings.OUT_API_KEY})
-                response.raise_for_status()
-                return response.json()
-            except HTTPStatusError as error:
+    if base_url!="test":
+        async with AsyncClient(base_url=base_url) as clinet:
+            for attempt in range(1, retries + 1):
                 try:
-                    response_data = error.response.json()
-                except:
-                    response_data = None
-                log(LogMessage(time=None,heder=f"Ошибка запроса. {error.response.status_code}",
-                    heder_dict=error.args,body=
-                        {
-                            "base_url":base_url, 
-                            "relative_url":relative_url, 
-                            "json":json,
-                            "response":response_data,
-                        },
-                        level=log_en.ERROR))
-            except Exception as error:
-                log(LogMessage(time=None,heder="Неизвестная ошибка.", 
-                    heder_dict=error.args,body=
-                        {
-                            "base_url":base_url, 
-                            "relative_url":relative_url, 
-                            "json":json
-                        },
-                        level=log_en.ERROR))
-                
-            if attempt < retries:
-                await asyncio.sleep(delay * (2 ** (attempt - 1)))
+                    response = await clinet.post(relative_url, json=json, headers={"API-KEY": settings.OUT_API_KEY})
+                    response.raise_for_status()
+                    return response.json()
+                except HTTPStatusError as error:
+                    try:
+                        response_data = error.response.json()
+                    except:
+                        response_data = None
+                    log(LogMessage(time=None,heder=f"Ошибка запроса. {error.response.status_code}",
+                        heder_dict=error.args,body=
+                            {
+                                "base_url":base_url, 
+                                "relative_url":relative_url, 
+                                "json":json,
+                                "response":response_data,
+                            },
+                            level=log_en.ERROR))
+                except Exception as error:
+                    log(LogMessage(time=None,heder="Неизвестная ошибка.", 
+                        heder_dict=error.args,body=
+                            {
+                                "base_url":base_url, 
+                                "relative_url":relative_url, 
+                                "json":json
+                            },
+                            level=log_en.ERROR))
+                    
+                if attempt < retries:
+                    await asyncio.sleep(delay * (2 ** (attempt - 1)))
+    else:
+        return None
